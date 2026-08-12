@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example değer içermiyor, sadece hangi değişkenlerin gerektiğini gösteriyor —
+# yeni gelen "neyi doldurmam lazım" diye sormasın diye repoda duruyor.
+!.env.example
 
 # vercel
 .vercel

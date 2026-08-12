@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firestore-indexes.json",
+  "//": [
+    "Firestore bileşik indeksleri.",
+    "",
+    "Neden dosyada: indeksi konsoldaki hata bağlantısına tıklayarak da",
+    "yaratabilirsin ama o bilgi hiçbir yere yazılmıyor. Proje şirket hesabına",
+    "taşınınca ya da yeni bir ortam kurulunca aynı duvara çarpılır.",
+    "",
+    "Yayınlamak için:  firebase deploy --only firestore:indexes",
+    "(firebase-tools kurulu değilse konsoldaki bağlantı da işi görür)",
+    "",
+    "Kural: `where` + farklı alanda `orderBy` kullanan her sorgu bir indeks",
+    "istiyor. Yeni sorgu yazarken buraya da eklemek gerekiyor."
+  ],
+  "indexes": [
+    {
+      "//": "Organizatörün etkinlikleri, en yenisi başta (listMyEvents)",
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

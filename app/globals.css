@@ -1,26 +1,382 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Design token'ları. Landing page ekran görüntülerinden çıkarıldı.
+   Misafir/ekran arayüzleri geldiğinde bu blok tek kaynak olarak kalacak —
+   yeni renk eklemeden önce buraya bak.
+--------------------------------------------------------------------------- */
+@theme {
+  /* --font-sans burada TANIMLI DEĞİL: layout.tsx'te next/font o değişkeni
+     html üzerine yazıyor, shadcn'in `@theme inline` bloğu da `font-sans`
+     utility'sini ona bağlıyor. Burada da tanımlarsam iki kaynak çakışıyor. */
+
+  /* Etkinlik kurulum akışındaki altın renkli cümle değerleri bu yüzü kullanıyor */
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+
+  /* Zeminler */
+  --color-ink: #050506;
+  --color-surface: #101014;
+  --color-surface-2: #16161b;
+  --color-surface-3: #1d1d23;
+
+  /* Kart tonları — hero ve pricing'de soldan sağa ısınan seri */
+  --color-tint-steel: #111820;
+  --color-tint-slate: #14141a;
+  --color-tint-plum: #1b1622;
+  --color-tint-violet: #2a1b3e;
+
+  /* Marka */
+  --color-violet: #7c3aed;
+  --color-violet-deep: #4c1d95;
+  --color-magenta: #8b1d5e;
+
+  /* Etkinlik türü vurgu renkleri.
+     SADECE "Düğün & Nişan" altını tasarımdan ölçüldü; diğer üçü benim
+     önerim, onaylanması gerekiyor. Tek yerden değişiyor. */
+  --color-accent-wedding: #d0a961;
+  --color-accent-corporate: #7aa7d9;
+  --color-accent-party: #e069a8;
+  --color-accent-festival: #5fd4d0;
+
+  /* Metin */
+  --color-fg: #ffffff;
+  --color-fg-muted: #9a9ca5;
+  --color-fg-subtle: #6e7079;
+
+  /* Çizgiler */
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(255, 255, 255, 0.16);
+
+  --radius-card: 20px;
+  --radius-panel: 28px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    background-color: var(--color-ink);
+    /* Uzun Türkçe başlıklar kelime ortasından kırılmasın */
+    overflow-wrap: break-word;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Varsayılan KOYU: pazarlama sitesi ve kurulum akışı böyle.
+     Organizatör paneli açık tema olduğu için zeminini kendi layout'unda
+     `bg-background text-foreground` ile kendisi kuruyor.
+     (shadcn init buraya `@apply bg-background` eklemişti — bütün koyu
+     sayfaları beyaza çeviriyordu, kaldırıldı.) */
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-fg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-violet) 45%, transparent);
+    color: var(--color-fg);
+  }
+
+  /* Klavye ile gezinen için tek tip odak halkası. Fare tıklamasında çıkmaz. */
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-violet) 70%, white);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------------------------------------------------------------------------
+   Hero arkasındaki mor/magenta ışıma — sayfanın en tepesinden başlar.
+
+   ÖNEMLİ: Bu katman hero section'ının İÇİNDE değil, layout'ta duruyor ve
+   header'ın da arkasını kaplıyor. Hero'nun içinde olduğu sürece nav şeridi
+   ışımanın dışında kalıyor ve header hizasında sert bir kesik oluşuyordu.
+
+   Yüzdeler ~1250px'lik sabit bir katmana göre; sayfa uzasa da hero'nun
+   ışıması aynı yerde kalsın diye px yüksekliğine bağlı (glow-page'in aksine).
+--------------------------------------------------------------------------- */
+@utility glow-hero {
+  background-image:
+    radial-gradient(
+      58% 40% at 32% 12%,
+      color-mix(in oklab, var(--color-violet) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 37% at 80% 42%,
+      color-mix(in oklab, var(--color-magenta) 24%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      42% 33% at 6% 53%,
+      color-mix(in oklab, var(--color-violet-deep) 22%, transparent),
+      transparent 72%
+    );
+}
+
+/* ---------------------------------------------------------------------------
+   Sayfa geneli ışıma. Tek katman, dokümanın tamamını kaplıyor.
+
+   Neden bölüm bazlı değil: her section'da `overflow-hidden` var (polaroid'ler
+   taşabilsin diye), o yüzden section içine konan gradient kenarda sert
+   kesiliyor ve bant gibi görünüyordu. Bunun yerine bütün bölümlerin arkasında
+   tek bir katman duruyor — geçişler kesintisiz.
+
+   Dikey konumlar YÜZDE: sayfa uzayıp kısaldıkça ışımalar oranlı dağılmaya
+   devam eder, yeni bölüm eklendiğinde elle ayar gerekmez.
+   Alfa değerleri hero'dan düşük; buradaki iş ambiyans, odak noktası değil.
+--------------------------------------------------------------------------- */
+@utility glow-page {
+  background-image:
+    /* paketler — sağ omuz, hero'nun ışımasını devralır */
+    radial-gradient(
+        46% 15% at 78% 26%,
+        color-mix(in oklab, var(--color-violet) 30%, transparent),
+        transparent 72%
+      ),
+    radial-gradient(
+        42% 14% at 6% 34%,
+        color-mix(in oklab, var(--color-magenta) 26%, transparent),
+        transparent 74%
+      ),
+    /* paketler → özellikler geçişi. Bu blob olmadan arada ölü bant kalıyor. */
+      radial-gradient(
+        44% 14% at 60% 43%,
+        color-mix(in oklab, var(--color-violet-deep) 28%, transparent),
+        transparent 74%
+      ),
+    /* özellikler */
+      radial-gradient(
+        44% 15% at 99% 53%,
+        color-mix(in oklab, var(--color-magenta) 28%, transparent),
+        transparent 74%
+      ),
+    radial-gradient(
+        42% 14% at 2% 63%,
+        color-mix(in oklab, var(--color-violet) 27%, transparent),
+        transparent 74%
+      ),
+    /* viral / kapanış */
+      radial-gradient(
+        44% 14% at 84% 73%,
+        color-mix(in oklab, var(--color-violet-deep) 28%, transparent),
+        transparent 74%
+      ),
+    radial-gradient(
+        40% 13% at 12% 83%,
+        color-mix(in oklab, var(--color-magenta) 26%, transparent),
+        transparent 74%
+      ),
+    /* Sayfa sonu geniş ve ortalı — alt kenar aniden siyaha düşmesin */
+      radial-gradient(
+        64% 15% at 54% 96%,
+        color-mix(in oklab, var(--color-violet) 26%, transparent),
+        transparent 76%
+      );
+}
+
+/* ---------------------------------------------------------------------------
+   Etkinlik kurulum / giriş akışının arka planı.
+
+   Rengi `--accent` custom property'sinden alıyor: seçilen etkinlik türü
+   değiştiğinde sayfanın ışıması da onunla birlikte değişiyor (tasarımda
+   "Düğün & Nişan" seçilince ekran altın tonuna dönüyor). Henüz seçim
+   yapılmadıysa marka moruna düşüyor.
+--------------------------------------------------------------------------- */
+@utility glow-onboarding {
+  background-image:
+    radial-gradient(
+      52% 34% at 50% 16%,
+      color-mix(in oklab, var(--accent, var(--color-violet)) 20%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      44% 30% at 88% 62%,
+      color-mix(in oklab, var(--accent, var(--color-violet)) 14%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      44% 30% at 10% 74%,
+      color-mix(in oklab, var(--accent, var(--color-violet-deep)) 15%, transparent),
+      transparent 74%
+    );
+}
+
+/* "Etkinlik Hazırlanıyor" durumundaki nokta animasyonu */
+@keyframes mixo-pulse-dot {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility animate-pulse-dot {
+  animation: mixo-pulse-dot 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* Öne çıkan (Professional) pricing kartının iç ışıması */
+@utility glow-card {
+  background-image: radial-gradient(
+    80% 60% at 70% 0%,
+    color-mix(in oklab, var(--color-violet) 24%, transparent),
+    transparent 70%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Logo şeridi. İçerik iki kez basılır, %50 kaydırılır → kesintisiz döngü.
+--------------------------------------------------------------------------- */
+@keyframes mixo-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@utility animate-marquee {
+  animation: mixo-marquee 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ---------------------------------------------------------------------------
+   shadcn paleti — ORGANİZATÖR PANELİ.
+
+   Panel açık tema (ekran görüntülerindeki beyaz/lila zemin, mor vurgu);
+   pazarlama sitesi ve kurulum akışı koyu ve kendi `--color-*` token'larını
+   kullanıyor. İkisi karışmıyor: bu blok sadece shadcn componentlerini besliyor.
+
+   init'in getirdiği nötr gri değerler tasarıma göre yeniden ayarlandı.
+   Vurgu moru #7c3aed — pazarlama tarafındaki --color-violet ile aynı.
+--------------------------------------------------------------------------- */
+:root {
+  --background: oklch(0.978 0.004 286); /* sayfa zemini, açık lila */
+  --foreground: oklch(0.21 0.02 285);
+  --card: oklch(1 0 0); /* kartlar ve sidebar beyaz */
+  --card-foreground: oklch(0.21 0.02 285);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 285);
+  --primary: oklch(0.585 0.233 293); /* #7c3aed */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.968 0.005 286);
+  --secondary-foreground: oklch(0.21 0.02 285);
+  --muted: oklch(0.968 0.005 286);
+  --muted-foreground: oklch(0.552 0.016 286);
+  --accent: oklch(0.955 0.018 293); /* seçili menü / hover zemini */
+  --accent-foreground: oklch(0.5 0.2 293);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.925 0.006 286);
+  --input: oklch(0.925 0.006 286);
+  --ring: oklch(0.585 0.233 293);
+  --chart-1: oklch(0.585 0.233 293);
+  --chart-2: oklch(0.68 0.16 293);
+  --chart-3: oklch(0.76 0.11 293);
+  --chart-4: oklch(0.84 0.07 293);
+  --chart-5: oklch(0.9 0.04 293);
+  --radius: 0.625rem;
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.21 0.02 285);
+  --sidebar-primary: oklch(0.585 0.233 293);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.955 0.018 293);
+  --sidebar-accent-foreground: oklch(0.5 0.2 293);
+  --sidebar-border: oklch(0.925 0.006 286);
+  --sidebar-ring: oklch(0.585 0.233 293);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }

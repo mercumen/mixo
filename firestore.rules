@@ -1,0 +1,101 @@
+rules_version = '2';
+
+// ============================================================================
+// MIXOinteractive — Firestore Security Rules
+// ============================================================================
+//
+// TEMEL İLKE: İSTEMCİ FIRESTORE'A YAZMAZ.
+//
+// Veriyi değiştiren her şey Admin SDK üzerinden, doğruladığımız sunucu
+// endpoint'lerinden geçiyor. Admin SDK bu kuralları bypass eder — yani
+// aşağıdaki kısıtlar sunucuyu değil, tarayıcıdan gelen istekleri bağlıyor.
+//
+// Neden bu kadar sıkı:
+//   - Kredi düşümü transaction içinde ve sunucuda olmak zorunda; istemci
+//     kendi sayacına yazabilse "3 hakkım var" diyebilirdi
+//   - feed/live dokümanı ekranın tek gerçeği; oraya yazan bir istemci
+//     dev ekrana istediğini bastırabilirdi
+//   - Firebase API anahtarı public; koruma buradan geliyor
+//
+// İstemcinin okumaya ihtiyacı olan tek şeyler:
+//   - organizatör: kendi kullanıcı dokümanı ve sahibi olduğu etkinlikler
+//   - ekran: events/{id}/feed/live (realtime listener)
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // --- users -------------------------------------------------------------
+    // Kullanıcı sadece kendi dokümanını okur. Yazma yok: kayıt sırasında
+    // dokümanı /api/auth/bootstrap yaratıyor (Admin SDK ile).
+    // Rol de böylece istemciden değiştirilemiyor — kendini admin yapamaz.
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow list, create, update, delete: if false;
+    }
+
+    // --- events ------------------------------------------------------------
+    match /events/{eventId} {
+      // Organizatör sadece sahibi olduğu etkinliği okur.
+      allow get: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      // Liste sorgusu kapalı: "bütün etkinlikleri çek" diye bir ihtiyaç yok,
+      // panel kendi etkinliklerini sunucudan alıyor.
+      allow list: if false;
+      allow write: if false;
+
+      // --- ekranın dinlediği feed ----------------------------------------
+      // Herkese açık okuma: ekran (/display/{kod}) oturum açmıyor, laptop
+      // fullscreen çalışıyor. İçinde sadece ONAYLI fotoğrafların referansı
+      // ve gösterim adı var — kişisel veri barındırmıyor.
+      //
+      // NOT: etkinlik kodu tahmin edilebilirse yabancı da feed'i izleyebilir.
+      // Kabul edilmiş risk (kodlar kısa ve basılı olacak). Sıkılaştırmak
+      // gerekirse ekrana da imzalı bir jeton verilir.
+      match /feed/{docId} {
+        allow get: if true;
+        allow list, write: if false;
+      }
+
+      // --- misafir oturumları ---------------------------------------------
+      // İstemci hiç okumuyor/yazmıyor. Misafir uygulaması kendi durumunu
+      // sunucu endpoint'lerinden öğreniyor (kalan kredi dahil).
+      match /sessions/{sessionId} {
+        allow read, write: if false;
+      }
+
+      // --- fotoğraflar -----------------------------------------------------
+      // Moderasyon kuyruğu ve galeri de sunucudan besleniyor: durum
+      // alanına istemcinin yazması onay mekanizmasını anlamsız kılardı.
+      match /photos/{photoId} {
+        allow read, write: if false;
+      }
+
+      // --- görevler --------------------------------------------------------
+      match /missions/{missionId} {
+        allow get: if signedIn();
+        allow list: if signedIn();
+        allow write: if false;
+      }
+    }
+
+    // --- görev şablonları --------------------------------------------------
+    match /missionTemplates/{templateId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    // --- geri kalan her şey ------------------------------------------------
+    // Yeni bir koleksiyon eklenip kural yazmayı unutursak açıkta kalmasın.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
