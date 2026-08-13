@@ -18,6 +18,8 @@ export type StoredEventDraft = {
   name: string;
   typeId: string;
   guestRange: string;
+  /** Landing'de paket de seçiliyor; sihirbaz 1. adımı atlayıp 2'den başlıyor */
+  planId: string;
 };
 
 export function saveEventDraft(draft: StoredEventDraft) {
@@ -41,6 +43,7 @@ export function readEventDraft(): StoredEventDraft | null {
       name: parsed.name,
       typeId: parsed.typeId,
       guestRange: typeof parsed.guestRange === "string" ? parsed.guestRange : "",
+      planId: typeof parsed.planId === "string" ? parsed.planId : "",
     };
   } catch {
     return null;
@@ -54,4 +57,29 @@ export function clearEventDraft() {
   } catch {
     // önemsiz
   }
+  snapshot = undefined;
+}
+
+/* ---------------------------------------------------------------------------
+   React `useSyncExternalStore` köprüsü.
+
+   Taslağı render sırasında okumak sunucu/istemci uyuşmazlığı yaratıyordu
+   (sunucuda sessionStorage yok). `useSyncExternalStore` sunucu ve istemci için
+   ayrı snapshot alabildiği için doğru araç.
+
+   ÖNBELLEK ŞART: `getSnapshot` her çağrıda yeni bir nesne dönerse React
+   "değişti" sanıp sonsuz render döngüsüne girer. Taslak oturum içinde
+   değişmediği için bir kez okuyup saklıyoruz.
+--------------------------------------------------------------------------- */
+
+let snapshot: StoredEventDraft | null | undefined;
+
+export function getEventDraftSnapshot(): StoredEventDraft | null {
+  if (snapshot === undefined) snapshot = readEventDraft();
+  return snapshot;
+}
+
+/** Taslak oturum içinde değişmiyor; abone olacak bir şey yok. */
+export function subscribeToEventDraft(): () => void {
+  return () => {};
 }

@@ -43,6 +43,7 @@ export default async function SettingsPage() {
 
   return (
     <SettingsClient
+      planId={event.planId}
       values={{
         name: event.name,
         type: event.typeId,

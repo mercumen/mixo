@@ -142,23 +142,8 @@ export const galleryStats = {
     "Fotoğraflar etkinlik bitiminden 72 saat sonra silinir. İndirme penceresi 18 Kasım 2026, 01:00 tarihinde kapanır.",
 };
 
-// --- Sahne şablonları ------------------------------------------------------
-
-export type StageTemplate = {
-  id: string;
-  name: string;
-  description: string;
-};
-
-export const stageTemplates: StageTemplate[] = [
-  { id: "organik-kolaj", name: "Organik Kolaj", description: "Düzensiz boyutlu kareler" },
-  { id: "foto-bulutu", name: "Foto Bulutu", description: "Merkeze yakınsayan düzen" },
-  { id: "mozaik-portre", name: "Mozaik Portre", description: "Fotoğraflar birleşip tek görsel olur" },
-  { id: "spotlight", name: "Spotlight", description: "Tek büyük kare, yavaş zoom" },
-  { id: "polaroid-yigini", name: "Polaroid Yığını", description: "Masaya düşen anı kartları" },
-  { id: "3d-karusel", name: "3D Karusel", description: "Perspektifte dönen halka" },
-  { id: "zaman-tuneli", name: "Zaman Tüneli", description: "Saat bandında ilerleyen anlar" },
-];
+// Sahne şablonları buradan kaldırıldı: tek kaynak lib/stage-templates.ts
+// (pakete göre filtreleme ve mozaik/akış ayrımı orada).
 
 // --- Ekip ------------------------------------------------------------------
 
@@ -197,83 +182,8 @@ export const pendingInvites: PendingInvite[] = [
   { id: "i3", email: "kivanctatlitug@yahoo.com", sentLabel: "5 gün önce gönderildi", expiresLabel: "3 gün sonra iptal olur", expiringSoon: true },
 ];
 
-// --- Paketler --------------------------------------------------------------
-
-export type Plan = {
-  id: string;
-  name: string;
-  priceLabel: string;
-  priceSuffix?: string;
-  description: string;
-  featuresLead: string;
-  features: string[];
-  current?: boolean;
-  popular?: boolean;
-  /** Panel içindeki eylem butonunun metni */
-  action: string;
-  actionVariant: "outline" | "default" | "ghost";
-};
-
-export const plans: Plan[] = [
-  {
-    id: "essential",
-    name: "Essential",
-    priceLabel: "₺ 2.500",
-    priceSuffix: "/ etkinlik",
-    description: "Etkileşimli etkinlik deneyimine hızlı ve kolay başlangıç.",
-    featuresLead: "Dahil Olan Özellikler",
-    features: [
-      "QR ile katılım",
-      "Manuel Görev Oluşturma",
-      "Fotoğraf Yükleme",
-      "Canlı Mozaik",
-      "Etkinlik Analizi",
-      "Dijital Galeri",
-      "Standart Destek",
-    ],
-    action: "Düşür",
-    actionVariant: "outline",
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    priceLabel: "₺ 5.900",
-    priceSuffix: "/ etkinlik",
-    description: "Yapay zekâ destekli katılımcı deneyimi ve gelişmiş etkinlik yönetimi.",
-    featuresLead: "Essential'daki tüm özelliklere ek olarak",
-    features: [
-      "Kişiselleştirilmiş Yapay Zekâ Görevleri",
-      "Yapay Zekâ İçerik Moderasyonu",
-      "Canlı Görsel Deneyimleri",
-      "Gelişmiş Etkinlik Analizi",
-      "Markaya Özel Deneyim",
-      "Öncelikli Destek",
-      "Genişletilmiş Dijital Arşiv",
-    ],
-    current: true,
-    popular: true,
-    action: "Mevcut Plan",
-    actionVariant: "ghost",
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    priceLabel: "Özel Fiyat",
-    description:
-      "Büyük ölçekli etkinlikler ve kurumsal projeler için tamamen özelleştirilebilir çözüm.",
-    featuresLead: "Professional'daki tüm özelliklere ek olarak",
-    features: [
-      "White Label",
-      "Tamamen Özelleştirilebilir Görsel Deneyimler",
-      "Özel Tasarım Desteği",
-      "Kuruma Özel Geliştirmeler",
-      "Gelişmiş Teknik Analiz",
-      "Öncelikli Teknik Destek",
-    ],
-    action: "Satışla İletişime Geç",
-    actionVariant: "default",
-  },
-];
+// Paketler buradan kaldırıldı: tek kaynak lib/plans.ts (landing, sihirbaz ve
+// Ayarlar aynı listeyi kullanıyor).
 
 // --- Ayarlar formu ---------------------------------------------------------
 

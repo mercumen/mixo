@@ -146,10 +146,18 @@ export async function signInWithPassword(input: {
   }
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(): Promise<{ isNewAccount: boolean }> {
   try {
     const cred = await signInWithPopup(getClientAuth(), getGoogleProvider());
     await establishSession(cred.user);
+    /**
+     * Google ile ilk kez giren mi, geri dönen mi?
+     * Firebase bu bilgiyi kullanıcı kaydındaki iki zaman damgasında veriyor:
+     * ilk girişte oluşturma ve son giriş anı aynı oluyor.
+     */
+    const meta = cred.user.metadata;
+    const isNewAccount = meta.creationTime === meta.lastSignInTime;
+    return { isNewAccount };
   } catch (error) {
     throw error instanceof Error && error.name !== "FirebaseError"
       ? error

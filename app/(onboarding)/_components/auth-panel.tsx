@@ -12,7 +12,6 @@ import {
   signInWithPassword,
   signUpWithPassword,
 } from "../_lib/auth";
-import { saveEventDraft } from "@/lib/event-draft";
 import type { EventDraft } from "../_lib/event-setup";
 import { AuthField } from "./auth-field";
 import { OnboardingShell } from "./onboarding-shell";
@@ -68,25 +67,24 @@ export function AuthPanel({
    * `/giris?devam=https://kotu-site` ile kullanıcıyı kendi sitesine
    * yönlendirebilirdi. Sadece kendi panelimizin yolları kabul ediliyor.
    */
-  async function onAuthenticated() {
+  /**
+   * @param isNewAccount Yeni hesap mı açıldı?
+   *   Yeni hesap → hiç etkinliği yok, tek yapacağı iş etkinlik kurmak,
+   *               doğrudan Kurulum Sihirbazı'na alıyoruz.
+   *   Mevcut hesap → etkinlikleri olabilir, panele bırakıyoruz.
+   */
+  async function onAuthenticated(isNewAccount: boolean) {
     // Kurulum akışından geldiysek etkinliği şimdi yaratıyoruz. Hata olursa
     // panele yine gidiyoruz: hesap açıldı, etkinliği panelden de yaratabilir.
     /**
-     * Etkinlik BURADA YARATILMIYOR.
+     * Taslağı BURADA KAYDETMİYORUZ.
      *
-     * Landing'in cevapları oturuma yazılıyor, kullanıcı panele girer girmez
-     * Kurulum Sihirbazı açılıyor ve etkinlik oranın 1. adımından doğuyor.
-     * Tek yaratma yolu olması, tarih/konum gibi alanların da aynı formda
-     * toplanması demek — iki ayrı yaratma yolu tutmuyoruz.
+     * Landing akışı paket adımında zaten oturuma yazdı (paket dahil). Burada
+     * tekrar yazsaydık paket alanını sıfırlardık — `draft` prop'unda paket
+     * bilgisi yok.
+     *
+     * Etkinlik de burada yaratılmıyor: Kurulum Sihirbazı'nda doğuyor.
      */
-    if (draft?.type) {
-      saveEventDraft({
-        name: draft.name,
-        typeId: draft.type.id,
-        guestRange: draft.guests ?? "",
-      });
-    }
-
     const requested = new URLSearchParams(window.location.search).get("devam");
     const safe =
       requested &&
@@ -102,8 +100,11 @@ export function AuthPanel({
      * "şimdi de şu düğmeye bas" demek akışı kırıyor. Ad ve tür sihirbazda
      * önceden dolu geliyor.
      */
-    // Landing akışından geldiyse doğrudan etkinlik oluşturma ekranına
-    router.replace(draft ? "/dashboard?kurulum=1" : safe);
+    /**
+     * Yeni hesap ya da landing akışından gelen → etkinlik oluşturma ekranı.
+     * `?devam=` ile korunan bir sayfaya gitmek isteyen mevcut kullanıcı → oraya.
+     */
+    router.replace(isNewAccount || draft ? "/dashboard?kurulum=1" : safe);
   }
 
   return (
@@ -232,7 +233,7 @@ function EmailStep({
   onAuthenticated,
 }: {
   onResolved: (mode: Mode) => void;
-  onAuthenticated: () => void | Promise<void>;
+  onAuthenticated: (isNewAccount: boolean) => void | Promise<void>;
 }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState<false | "email" | "google">(false);
@@ -259,8 +260,8 @@ function EmailStep({
     setBusy("google");
     setError(null);
     try {
-      await signInWithGoogle();
-      await onAuthenticated();
+      const { isNewAccount } = await signInWithGoogle();
+      await onAuthenticated(isNewAccount);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Giriş yapılamadı.");
       setBusy(false);
@@ -335,7 +336,7 @@ function SignupStep({
   email: string;
   eventName?: string;
   onChangeEmail: () => void;
-  onAuthenticated: () => void | Promise<void>;
+  onAuthenticated: (isNewAccount: boolean) => void | Promise<void>;
 }) {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -349,7 +350,7 @@ function SignupStep({
     setError(null);
     try {
       await signUpWithPassword({ email, password, fullName });
-      await onAuthenticated();
+      await onAuthenticated(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Hesap oluşturulamadı.");
       setBusy(false);
@@ -416,7 +417,7 @@ function LoginStep({
   email: string;
   eventName?: string;
   onChangeEmail: () => void;
-  onAuthenticated: () => void | Promise<void>;
+  onAuthenticated: (isNewAccount: boolean) => void | Promise<void>;
 }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -447,7 +448,7 @@ function LoginStep({
     setError(null);
     try {
       await signInWithPassword({ email, password });
-      await onAuthenticated();
+      await onAuthenticated(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Giriş yapılamadı.");
       setBusy(false);

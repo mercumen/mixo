@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { eventTypes } from "@/app/(onboarding)/_lib/event-setup";
 import { InfoNote, PageHeader } from "../../_components/ui-bits";
-import { plans } from "../../_lib/mock";
+import { plans } from "@/lib/plans";
 
 /**
  * Ayarlar formu. Değerler etkinlik dokümanından geliyor; konum ve misafir
@@ -33,7 +33,13 @@ export type SettingsValues = {
   location: string;
 };
 
-export function SettingsClient({ values }: { values: SettingsValues }) {
+export function SettingsClient({
+  values,
+  planId,
+}: {
+  values: SettingsValues;
+  planId: string | null;
+}) {
   return (
     <div className="space-y-5">
       <PageHeader
@@ -51,7 +57,7 @@ export function SettingsClient({ values }: { values: SettingsValues }) {
           <EventInfoTab values={values} />
         </TabsContent>
         <TabsContent value="plan" className="mt-6">
-          <PlansTab />
+          <PlansTab currentPlanId={planId} />
         </TabsContent>
       </Tabs>
     </div>
@@ -204,7 +210,7 @@ function EventInfoTab({ values }: { values: SettingsValues }) {
   );
 }
 
-function PlansTab() {
+function PlansTab({ currentPlanId }: { currentPlanId: string | null }) {
   return (
     <div>
       <div>
@@ -215,7 +221,9 @@ function PlansTab() {
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
-        {plans.map((plan) => (
+        {plans.map((plan) => {
+          const isCurrent = plan.id === currentPlanId;
+          return (
           <Card
             key={plan.id}
             className={cn(
@@ -234,7 +242,7 @@ function PlansTab() {
               <h3 className="text-[13.5px] font-semibold tracking-tight">
                 {plan.name}
               </h3>
-              {plan.current ? (
+              {isCurrent ? (
                 <Badge
                   variant="secondary"
                   className="bg-accent text-[10.5px] text-accent-foreground"
@@ -273,13 +281,18 @@ function PlansTab() {
 
             <Button
               className="mt-6 w-full"
-              variant={plan.actionVariant === "ghost" ? "secondary" : plan.actionVariant}
-              disabled={plan.current}
+              variant={isCurrent ? "secondary" : plan.contactOnly ? "default" : "outline"}
+              disabled={isCurrent || plan.contactOnly}
             >
-              {plan.action}
+              {isCurrent
+                ? "Mevcut Plan"
+                : plan.contactOnly
+                  ? "Satışla İletişime Geç"
+                  : "Bu Planı Seç"}
             </Button>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -2,6 +2,12 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/firebase/admin";
 import { paths, type EventDoc } from "@/lib/schema";
 import { setupStepIds, type SetupStepId } from "@/lib/setup-steps";
+import {
+  findStageTemplate,
+  isTemplateAllowed,
+  referenceKinds,
+  referenceShapes,
+} from "@/lib/stage-templates";
 import { eventTypes } from "@/app/(onboarding)/_lib/event-setup";
 
 /**
@@ -120,12 +126,50 @@ export async function PATCH(
   }
 
   // --- Adım 2: Sahne Görünümü ----------------------------------------------
+  if (typeof body.stageTemplateId === "string") {
+    if (!findStageTemplate(body.stageTemplateId)) {
+      return Response.json({ error: "Sahne şablonu geçersiz." }, { status: 400 });
+    }
+    /**
+     * Pakete karşı doğrulama SUNUCUDA. Arayüz zaten filtrelenmiş liste
+     * gösteriyor ama istemciye güvenmiyoruz: paketinde olmayan bir şablonu
+     * doğrudan istekle seçmek mümkün olmamalı.
+     *
+     * Paket henüz seçilmemişse serbest — sihirbazda Sahne, Paket'ten önce
+     * geliyor. Paket seçildiğinde uyum yeniden kontrol ediliyor.
+     */
+    const planId =
+      typeof body.planId === "string" ? body.planId : existing.planId;
+    if (!isTemplateAllowed(body.stageTemplateId, planId)) {
+      return Response.json(
+        { error: "Bu sahne şablonu paketinizde yok." },
+        { status: 400 },
+      );
+    }
+    patch.stageTemplateId = body.stageTemplateId;
+  }
+
   if (body.stageMode === "mozaik" || body.stageMode === "akis") {
     patch.stageMode = body.stageMode;
   }
-  if (body.stageReferenceKind === "logo" || body.stageReferenceKind === "foto") {
-    patch.stageReferenceKind = body.stageReferenceKind;
+
+  if (typeof body.stageReferenceKind === "string") {
+    if (!referenceKinds.some((k) => k.id === body.stageReferenceKind)) {
+      return Response.json({ error: "Referans türü geçersiz." }, { status: 400 });
+    }
+    patch.stageReferenceKind = body.stageReferenceKind as
+      | "sekil"
+      | "logo"
+      | "foto";
   }
+
+  if (typeof body.stageReferenceShape === "string") {
+    if (!referenceShapes.some((sh) => sh.id === body.stageReferenceShape)) {
+      return Response.json({ error: "Şekil geçersiz." }, { status: 400 });
+    }
+    patch.stageReferenceShape = body.stageReferenceShape;
+  }
+
   if (typeof body.stageReferenceKey === "string") {
     patch.stageReferenceKey = body.stageReferenceKey;
   }

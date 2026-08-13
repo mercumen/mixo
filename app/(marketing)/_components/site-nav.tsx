@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/app/_components/wordmark";
+import { AuthNavButton } from "./auth-nav-button";
 import { ButtonLink, Container } from "./ui";
 
 /**
@@ -46,9 +47,9 @@ export function SiteNav() {
           <ButtonLink href="/etkinlik-olustur" variant="solid" size="sm">
             Etkinliği Yarat
           </ButtonLink>
-          <ButtonLink href="/giris" variant="dark" size="sm">
-            Giriş Yap
-          </ButtonLink>
+          {/* Sadece bu düğme istemcide: girişliyken "Panelim" oluyor.
+              Nav ve sayfanın kalanı sunucuda, landing statik kalıyor. */}
+          <AuthNavButton />
         </div>
       </Container>
     </header>

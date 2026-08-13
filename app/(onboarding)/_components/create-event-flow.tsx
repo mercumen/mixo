@@ -1,6 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PlanPicker } from "@/app/_components/plan-picker";
+import { useSignedIn } from "@/app/_components/use-signed-in";
+import { saveEventDraft } from "@/lib/event-draft";
+import type { PlanId } from "@/lib/plans";
 import { ArrowRightIcon } from "@/app/(marketing)/_components/icons";
 import { ButtonLink } from "@/app/(marketing)/_components/ui";
 import {
@@ -28,7 +33,11 @@ import { StepDots } from "./step-dots";
 /**
  * "Etkinliği Yarat" akışı.
  *
- *   cümle kurma (3 adım) → hazırlanıyor → e-posta → kayıt | giriş
+ *   cümle kurma (3 adım) → paket seçimi → hazırlanıyor → e-posta → kayıt | giriş
+ *
+ * PAKET BURADA SORULUYOR çünkü kullanılabilir sahne şablonları pakete göre
+ * değişiyor. Paketi burada seçen kullanıcı, panele girince Kurulum
+ * Sihirbazı'nın 1. adımını (Paket) atlayıp doğrudan 2. adımdan başlıyor.
  *
  * Tek client component durum tutuyor; adımlar URL'e yansımıyor çünkü akış
  * tek oturumluk ve geri/ileri ile yarıda bölünmesi istenmiyor.
@@ -44,6 +53,7 @@ const STEP_COUNT = 3;
 
 type Stage =
   | { kind: "wizard" }
+  | { kind: "plan" }
   | { kind: "preparing" }
   | { kind: "auth"; eventName: string };
 
@@ -51,6 +61,9 @@ export function CreateEventFlow() {
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
   const [step, setStep] = useState(0);
   const [stage, setStage] = useState<Stage>({ kind: "wizard" });
+  const [planId, setPlanId] = useState<PlanId | null>(null);
+  const signedIn = useSignedIn();
+  const router = useRouter();
 
   const guestRange = findGuestRange(draft.guests);
   const answered = {
@@ -78,18 +91,48 @@ export function CreateEventFlow() {
   }
 
   /**
-   * Taslak tamam. Etkinlik yazımı yok — taslak kimlik adımına, oradan da
-   * oturum üzerinden Kurulum Sihirbazı'na taşınıyor.
+   * Taslak tamam. Etkinlik yazımı yok — taslak oturuma yazılıp Kurulum
+   * Sihirbazı'na taşınıyor.
+   *
+   * ZATEN GİRİŞ YAPMIŞSA kimlik adımını ATLIYORUZ: aksi halde giriş yapmış
+   * bir kullanıcıya "giriş yapın" ekranı gösteriliyordu.
    *
    * "Etkinlik Hazırlanıyor" ekranı tasarımdan geliyor ve akışı bölmemek için
    * kısa bir geçiş olarak duruyor.
    */
-  async function submitDraft() {
+  /** Cümle tamam → paket adımı. */
+  function submitDraft() {
     const name = draft.name.trim();
     if (!draft.type || !draft.guests || name.length === 0) return;
+    setStage({ kind: "plan" });
+  }
+
+  /**
+   * Paket seçildi. Etkinlik yazımı YOK — taslak (paket dahil) oturuma
+   * yazılıp panele taşınıyor, etkinlik Kurulum Sihirbazı'nda doğuyor.
+   *
+   * Zaten giriş yapmışsa kimlik adımını atlıyoruz.
+   */
+  async function submitPlan(chosen: PlanId) {
+    const name = draft.name.trim();
+    if (!draft.type || !draft.guests) return;
+
+    setPlanId(chosen);
+    saveEventDraft({
+      name,
+      typeId: draft.type.id,
+      guestRange: draft.guests,
+      planId: chosen,
+    });
 
     setStage({ kind: "preparing" });
     await new Promise((resolve) => setTimeout(resolve, 1400));
+
+    if (signedIn === "yes") {
+      router.push("/dashboard?kurulum=1");
+      return;
+    }
+
     setStage({ kind: "auth", eventName: name });
   }
 
@@ -104,6 +147,43 @@ export function CreateEventFlow() {
     );
   }
 
+  // --- Paket adımı ----------------------------------------------------------
+  if (stage.kind === "plan") {
+    return (
+      <OnboardingShell accent={draft.type?.accent} footer={false}>
+        <div className="w-full max-w-[980px]">
+          <div className="text-center">
+            <h1 className="text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold tracking-tight">
+              Hangi paket sana uygun?
+            </h1>
+            <p className="mx-auto mt-3 max-w-[520px] text-[13px] leading-relaxed text-fg-muted">
+              Paketler etkinlik başına; abonelik yok, otomatik yenileme yok.
+              Salonda görünecek sahne şablonları da pakete göre değişiyor.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <PlanPicker
+              tone="dark"
+              value={planId}
+              onSelect={(id) => void submitPlan(id)}
+            />
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setStage({ kind: "wizard" })}
+              className="text-[12px] text-fg-subtle transition-colors hover:text-fg-muted"
+            >
+              Geri
+            </button>
+          </div>
+        </div>
+      </OnboardingShell>
+    );
+  }
+
   const preparing = stage.kind === "preparing";
   const nameStepVisible = answered.type && answered.guests;
 
@@ -112,12 +192,18 @@ export function CreateEventFlow() {
       accent={draft.type?.accent}
       footer={false}
       headerRight={
-        <ButtonLink href="/giris" variant="dark" size="sm">
-          {/* Tam metin nowrap olduğu için mobilde dokümanı viewport'tan geniş
-              yapıp sayfayı yatay kaydırıyordu; küçük ekranda kısalıyor. */}
-          <span className="hidden sm:inline">Zaten hesabınız var mı?&nbsp;</span>
-          Giriş Yap
-        </ButtonLink>
+        signedIn === "yes" ? (
+          <ButtonLink href="/dashboard" variant="dark" size="sm">
+            Panelim
+          </ButtonLink>
+        ) : (
+          <ButtonLink href="/giris" variant="dark" size="sm">
+            {/* Tam metin nowrap olduğu için mobilde dokümanı viewport'tan geniş
+                yapıp sayfayı yatay kaydırıyordu; küçük ekranda kısalıyor. */}
+            <span className="hidden sm:inline">Zaten hesabınız var mı?&nbsp;</span>
+            Giriş Yap
+          </ButtonLink>
+        )
       }
     >
       <div className="w-full max-w-[820px]">

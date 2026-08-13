@@ -23,15 +23,14 @@ import { NoEventState } from "./_components/empty-state";
 import { SetupWizard } from "./_components/setup-wizard/setup-wizard";
 import { InfoNote, SectionHeading } from "./_components/ui-bits";
 import { getDashboardContext } from "./_lib/context";
+import { listMissions } from "./_lib/data";
 import {
   countdownTo,
   eventTypeLabel,
   formatLongDate,
   formatShortDateTime,
 } from "./_lib/format";
-import { plans } from "./_lib/mock";
-
-const currentPlan = plans.find((p) => p.current) ?? plans[0];
+import { findPlan } from "@/lib/plans";
 
 /**
  * Sihirbaz URL'de açılıyor (`?kurulum=1`).
@@ -51,7 +50,7 @@ export default async function OverviewPage({
     return (
       <div className="space-y-6">
         {/* Etkinlik yokken de sihirbaz açılıyor: 1. adım etkinliği YARATIYOR */}
-        {kurulum === "1" ? <SetupWizard event={null} /> : null}
+        {kurulum === "1" ? <SetupWizard event={null} missionCount={0} /> : null}
 
         <div>
           <h1 className="text-[19px] font-semibold tracking-tight">
@@ -66,6 +65,7 @@ export default async function OverviewPage({
     );
   }
 
+  const missions = await listMissions(event.id);
   const completed = event.completedSteps ?? [];
   const progress = progressFromSteps(completed);
   const next = nextIncompleteStep(completed);
@@ -73,7 +73,9 @@ export default async function OverviewPage({
   return (
     <div className="space-y-6">
       {/* Panel içindeki kurulum: landing'in cümle sihirbazı DEĞİL, bu modal */}
-      {kurulum === "1" ? <SetupWizard event={event} /> : null}
+      {kurulum === "1" ? (
+        <SetupWizard event={event} missionCount={missions.length} />
+      ) : null}
 
       <EventBanner event={event} />
 
@@ -99,7 +101,7 @@ export default async function OverviewPage({
         </div>
         <div className="space-y-5">
           <CountdownCard event={event} />
-          <CurrentPlanCard />
+          <CurrentPlanCard planId={event.planId} />
         </div>
       </div>
     </div>
@@ -405,7 +407,29 @@ function CountdownCard({ event }: { event: EventDoc }) {
   );
 }
 
-function CurrentPlanCard() {
+function CurrentPlanCard({ planId }: { planId: string | null }) {
+  const currentPlan = findPlan(planId);
+
+  // Paket henüz seçilmemişse uydurma plan göstermiyoruz
+  if (!currentPlan) {
+    return (
+      <Card className="gap-0 p-5">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted">
+            <Sparkles className="size-4 text-muted-foreground" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground">Mevcut Plan</p>
+            <p className="text-[13.5px] font-semibold">Paket seçilmedi</p>
+          </div>
+        </div>
+        <Button asChild size="sm" className="mt-4 w-full">
+          <Link href="/dashboard?kurulum=1">Paket Seç</Link>
+        </Button>
+      </Card>
+    );
+  }
+
   return (
     <Card className="gap-0 p-5">
       <div className="flex items-center gap-2.5">

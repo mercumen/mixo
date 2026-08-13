@@ -142,8 +142,10 @@ export async function POST(request: Request) {
         typeof locationName === "string" && locationName.trim()
           ? locationName.trim().slice(0, 120)
           : null,
+      stageTemplateId: null,
       stageMode: null,
       stageReferenceKind: null,
+      stageReferenceShape: null,
       stageReferenceKey: null,
       missionSubject: null,
       missionTone: null,

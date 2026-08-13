@@ -16,6 +16,7 @@ export function WizardRail({
   currentStep,
   completedSteps,
   onStepClick,
+  hintOverrides,
 }: {
   eventName: string;
   dateLabel: string;
@@ -23,6 +24,11 @@ export function WizardRail({
   completedSteps: string[];
   /** Tamamlanmış adıma geri dönmek için */
   onStepClick: (id: SetupStepId) => void;
+  /**
+   * Pakete göre değişen alt yazılar. Örnek: Essential'da AI görev üretimi
+   * yok, o yüzden "AI ile kişiselleştirilmiş görevler" yazmamalı.
+   */
+  hintOverrides?: Partial<Record<SetupStepId, string>>;
 }) {
   return (
     <div className="hidden w-[270px] shrink-0 flex-col bg-accent/40 p-7 md:flex">
@@ -78,7 +84,7 @@ export function WizardRail({
                     {step.title}
                   </span>
                   <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
-                    {step.hint}
+                    {hintOverrides?.[step.id] ?? step.hint}
                   </span>
                 </span>
               </button>

@@ -62,10 +62,24 @@ export type EventDoc = {
   expectedGuests: number | null;
   locationName: string | null;
 
-  /** Sihirbazın 2. adımı: mozaik mi, serbest akış mı */
+  /**
+   * Sihirbazın 2. adımı / Sahne sayfası: seçilen sahne şablonu.
+   *
+   * Şablonlar PAKETE GÖRE kısıtlı ve kısıt kapsayan değil ayıran — paket
+   * değişince seçili şablon geçersiz kalabiliyor. Doğrulama
+   * `lib/stage-templates.ts` içindeki `isTemplateAllowed` ile yapılıyor.
+   */
+  stageTemplateId: string | null;
+  /**
+   * Sihirbazın Sahne adımında seçilen mod: mozaik mi, serbest akış mı.
+   * Şablon Sahne sayfasında seçiliyor ve bu moda uymak zorunda.
+   */
   stageMode: "mozaik" | "akis" | null;
-  /** Mozaik seçildiyse referansın türü ve R2'deki yolu */
-  stageReferenceKind: "logo" | "foto" | null;
+  /** Mozaik referansı: hazır şekil / logo / referans fotoğraf */
+  stageReferenceKind: "sekil" | "logo" | "foto" | null;
+  /** "Hazır Şekil" seçildiyse hangi siluet */
+  stageReferenceShape: string | null;
+  /** Logo ya da fotoğraf yüklendiyse R2'deki yolu */
   stageReferenceKey: string | null;
 
   /** Sihirbazın 3. adımı: AI görev üretimi için girdiler */

@@ -23,5 +23,5 @@ export default async function StagePage() {
     );
   }
 
-  return <StageClient eventName={event.name} />;
+  return <StageClient event={event} />;
 }

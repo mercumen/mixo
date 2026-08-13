@@ -7,11 +7,18 @@
  * demek olurdu.
  */
 
+/**
+ * SIRA ÖNEMLİ: Paket EN BAŞTA.
+ *
+ * Sebep: kullanılabilir sahne şablonları pakete göre değişiyor. Paket
+ * seçilmeden Sahne adımına gelirsek kullanıcı seçemeyeceği şablonları
+ * görüyor ya da liste sonradan altından kayıyor.
+ */
 export const setupStepIds = [
+  "paket",
   "bilgiler",
   "sahne",
   "gorevler",
-  "paket",
   "ekip",
 ] as const;
 
@@ -28,6 +35,13 @@ export type SetupStepMeta = {
 };
 
 export const setupSteps: SetupStepMeta[] = [
+  {
+    id: "paket",
+    title: "Paket",
+    hint: "Etkinliğine uygun plan",
+    // Atlanamaz: sahne şablonları pakete göre belirleniyor
+    skippable: false,
+  },
   {
     id: "bilgiler",
     title: "Etkinlik Bilgileri",
@@ -46,12 +60,6 @@ export const setupSteps: SetupStepMeta[] = [
     title: "Görev Havuzu",
     hint: "AI ile kişiselleştirilmiş görevler",
     // Atlanabilir: şablon görevleri etkinlik yaratılırken zaten kopyalanıyor
-    skippable: true,
-  },
-  {
-    id: "paket",
-    title: "Paket",
-    hint: "Etkinliğine uygun plan",
     skippable: true,
   },
   {
