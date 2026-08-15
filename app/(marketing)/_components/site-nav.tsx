@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/app/_components/wordmark";
 import { AuthNavButton } from "./auth-nav-button";
+import { MobileMenu } from "./mobile-menu";
 import { ButtonLink, Container } from "./ui";
 
 /**
@@ -18,11 +19,15 @@ export function SiteNav() {
     <header className="relative z-20 pt-6">
       <Container className="flex items-center justify-between gap-6">
         <Link href="/" aria-label="MIXOinteractive ana sayfa">
-          <Wordmark size="md" />
+          {/* 360px'te satır taşıyordu: dar ekranda küçük boy, sm ve üstünde
+              tasarımdaki boy. Wordmark ortak component olduğu için boy seçimi
+              burada, iki render'la yapılıyor — component'e dokunulmuyor. */}
+          <Wordmark size="sm" className="sm:hidden" />
+          <Wordmark size="md" className="hidden sm:inline" />
         </Link>
 
-        {/* Orta menü mobilde gizli. Tasarımda mobil hâli yok; hamburger menü
-            uydurmak yerine ana eylemleri görünür bırakıyorum. */}
+        {/* Orta menü lg altında gizli; linkler MobileMenu panelinde.
+            Tasarımda mobil hâli yok — panel mevcut pill stillerini kullanıyor. */}
         <nav aria-label="Ana menü" className="hidden lg:block">
           <ul className="flex items-center gap-2">
             {navLinks.map(({ label, href, active }) => (
@@ -48,8 +53,12 @@ export function SiteNav() {
             Etkinliği Yarat
           </ButtonLink>
           {/* Sadece bu düğme istemcide: girişliyken "Panelim" oluyor.
-              Nav ve sayfanın kalanı sunucuda, landing statik kalıyor. */}
-          <AuthNavButton />
+              Nav ve sayfanın kalanı sunucuda, landing statik kalıyor.
+              lg altında satıra sığmadığı için MobileMenu panelinde. */}
+          <div className="hidden lg:block">
+            <AuthNavButton />
+          </div>
+          <MobileMenu links={navLinks} />
         </div>
       </Container>
     </header>

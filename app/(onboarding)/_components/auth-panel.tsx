@@ -156,7 +156,9 @@ function Heading({
       {eventName ? (
         <p className="mt-2 text-[12.5px] leading-relaxed text-fg-muted">
           <span
-            className="font-serif text-[15px] italic"
+            /* break-words: 80 karaktere kadar serbest metin — boşluksuz bir ad
+               340px'lik kolonu telefonda taşırıyordu */
+            className="font-serif text-[15px] break-words italic"
             style={{ color: "var(--accent)" }}
           >
             {eventName}

@@ -1,5 +1,6 @@
 import { Bell, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { statusLabels } from "../_lib/format";
 import type { SidebarEvent } from "./sidebar";
@@ -13,8 +14,11 @@ import type { SidebarEvent } from "./sidebar";
  */
 export function DashboardTopbar({ event }: { event: SidebarEvent | null }) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/85 px-6 backdrop-blur">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur sm:gap-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-2.5">
+        {/* Mobilde sidebar Sheet olarak kapalı başlıyor — açma düğmesi burada.
+            Masaüstünde sidebar'ın kendi düğmesi var, burada gizli. */}
+        <SidebarTrigger className="-ml-1.5 md:hidden" />
         {event ? (
           <>
             <span className="min-w-0 truncate text-[13px] font-semibold">

@@ -137,7 +137,7 @@ function AiMissions({
         <div
           role="radiogroup"
           aria-label="Görev tonu"
-          className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-4"
         >
           {missionTones.map((tone) => {
             const selected = values.tone === tone.id;

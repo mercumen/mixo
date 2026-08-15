@@ -294,10 +294,12 @@ export function SetupWizard({
     <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent
         showCloseButton
+        // min(): geniş ekranda tasarım genişliği, dar ekranda viewport'tan taşmasın.
+        // sm altında DialogContent'in kendi max-w-[calc(100%-2rem)]'i geçerli.
         className={
           step === "paket"
-            ? "max-w-[1040px] gap-0 overflow-hidden p-0 sm:max-w-[1040px]"
-            : "max-w-[880px] gap-0 overflow-hidden p-0 sm:max-w-[880px]"
+            ? "gap-0 overflow-hidden p-0 sm:max-w-[min(1040px,calc(100vw-2rem))]"
+            : "gap-0 overflow-hidden p-0 sm:max-w-[min(880px,calc(100vw-2rem))]"
         }
       >
         <div className="flex max-h-[86vh]">
@@ -332,7 +334,7 @@ export function SetupWizard({
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-y-auto px-7 pt-7 pb-4">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-4 sm:px-7 sm:pt-7">
               <DialogTitle className="text-[16px] font-semibold tracking-tight">
                 {step === "paket"
                   ? "Hangi paket sana uygun?"
@@ -416,7 +418,7 @@ export function SetupWizard({
               ) : null}
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-border px-7 py-4">
+            <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-4 sm:px-7">
               <Button
                 variant="outline"
                 size="sm"

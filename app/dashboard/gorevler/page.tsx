@@ -67,7 +67,7 @@ export default async function TasksPage() {
         <EngineCard themeLabel={eventTypeLabel(event.typeId)} subject={event.name} />
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile label="Toplam Görev" value={stats.total} />
             <StatTile label="Aktif Görev" value={stats.active} />
             <StatTile label="Toplam Tamamlanma" value={stats.completions} />
@@ -197,66 +197,70 @@ function TaskTable({ missions }: { missions: MissionDoc[] }) {
         description="Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin."
       />
       <Card className="mt-4 gap-0 overflow-hidden p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="text-[11.5px]">Görev</TableHead>
-              <TableHead className="w-[110px] text-[11.5px]">Kaynak</TableHead>
-              <TableHead className="w-[90px] text-[11.5px]">Durum</TableHead>
-              <TableHead className="w-[130px] text-[11.5px]">Tamamlanma</TableHead>
-              <TableHead className="w-[60px]">
-                <span className="sr-only">İşlemler</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {missions.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell className="text-[12.5px]">
-                  <span className="flex items-center gap-2">
-                    {/* Sürükle-bırak sırası tasarımda var; davranış henüz yok */}
-                    <GripVertical
-                      className="size-3.5 shrink-0 text-muted-foreground/50"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0">{task.label}</span>
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      task.source === "ai"
-                        ? "bg-accent text-[11px] text-accent-foreground"
-                        : "bg-muted text-[11px] text-muted-foreground"
-                    }
-                  >
-                    {sourceLabels[task.source]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    defaultChecked={task.active}
-                    aria-label={`${task.label} görevini aç/kapat`}
-                  />
-                </TableCell>
-                <TableCell className="text-[12px] text-muted-foreground">
-                  {task.completions} kez
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 text-muted-foreground hover:text-destructive"
-                    aria-label={`Sil: ${task.label}`}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </TableCell>
+        {/* Dar ekranda kolonlar sıkışmasın: min-w tabloyu kapsayıcıdan geniş
+            tutuyor, taşan kısım yatay kaydırılıyor */}
+        <div className="overflow-x-auto">
+          <Table className="min-w-[560px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-[11.5px]">Görev</TableHead>
+                <TableHead className="w-[110px] text-[11.5px]">Kaynak</TableHead>
+                <TableHead className="w-[90px] text-[11.5px]">Durum</TableHead>
+                <TableHead className="w-[130px] text-[11.5px]">Tamamlanma</TableHead>
+                <TableHead className="w-[60px]">
+                  <span className="sr-only">İşlemler</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {missions.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell className="text-[12.5px]">
+                    <span className="flex items-center gap-2">
+                      {/* Sürükle-bırak sırası tasarımda var; davranış henüz yok */}
+                      <GripVertical
+                        className="size-3.5 shrink-0 text-muted-foreground/50"
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">{task.label}</span>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        task.source === "ai"
+                          ? "bg-accent text-[11px] text-accent-foreground"
+                          : "bg-muted text-[11px] text-muted-foreground"
+                      }
+                    >
+                      {sourceLabels[task.source]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      defaultChecked={task.active}
+                      aria-label={`${task.label} görevini aç/kapat`}
+                    />
+                  </TableCell>
+                  <TableCell className="text-[12px] text-muted-foreground">
+                    {task.completions} kez
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground hover:text-destructive"
+                      aria-label={`Sil: ${task.label}`}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </div>
   );

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth/session";
 import { DashboardSidebar } from "./_components/sidebar";
 import { DashboardTopbar } from "./_components/topbar";
@@ -53,13 +55,20 @@ export default async function DashboardLayout({
       }
     : null;
 
+  // Daralt/aç durumu çerezde: sayfa yenilenince sidebar zıplamasın
+  const sidebarState = (await cookies()).get("sidebar_state")?.value;
+
   return (
-    <div className="flex min-h-dvh flex-1 bg-background text-foreground">
+    <SidebarProvider
+      defaultOpen={sidebarState !== "false"}
+      className="bg-background text-foreground"
+    >
       <DashboardSidebar user={user} event={eventSummary} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* SidebarInset kendisi <main> — içeride ikinci bir main açmıyoruz */}
+      <SidebarInset>
         <DashboardTopbar event={eventSummary} />
-        <main className="flex-1 px-6 py-6">{children}</main>
-      </div>
-    </div>
+        <div className="flex-1 px-4 py-4 sm:px-6 sm:py-6">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

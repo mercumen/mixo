@@ -26,7 +26,9 @@ export function OnboardingShell({
       /* flex-1: iç içe `min-h-full` yüzdesi zincirlenmiyor (ara div'in
          yüksekliği auto olunca çözülmüyor), o yüzden büyüterek dolduruyoruz.
          İçeriğin dikeyde ortalanması buna bağlı. */
-      className="relative flex min-h-full flex-1 flex-col"
+      /* overflow-x-clip: dar ekranda herhangi bir çocuk (uzun kelime, mutlak
+         konumlu süs) taşarsa sayfa yatay kaydırmasın; scroll alanı da açmaz. */
+      className="relative flex min-h-full flex-1 flex-col overflow-x-clip"
       style={
         {
           /* Tür seçilmeden önce de bir değer olmalı: `var(--accent)` boşta

@@ -67,6 +67,42 @@ export function PlusIcon({ className = "size-6" }: IconProps) {
   );
 }
 
+/** lg altındaki nav menü düğmesi — açık/kapalı ikilisi. */
+export function MenuIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      aria-hidden="true"
+      className={`${base} ${className}`}
+    >
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h16" />
+    </svg>
+  );
+}
+
+export function CloseIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      aria-hidden="true"
+      className={`${base} ${className}`}
+    >
+      <path d="m6 6 12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
+}
+
 export function UserIcon({ className = "size-4" }: IconProps) {
   return (
     <svg

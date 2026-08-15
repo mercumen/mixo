@@ -118,7 +118,11 @@ export function QrDownloadModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent showCloseButton className="max-w-[600px] sm:max-w-[600px]">
+      {/* min(): dar ekranda viewport'tan taşmasın; içerik uzayınca modal içi kaydırılır */}
+      <DialogContent
+        showCloseButton
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-[min(600px,calc(100vw-2rem))]"
+      >
         <DialogTitle className="text-[16px] font-semibold tracking-tight">
           QR Kodunu İndir
         </DialogTitle>
