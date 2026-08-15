@@ -194,10 +194,11 @@ kalmamalı.
 
 | Servis | Ne yapılacak |
 |---|---|
+| **GitHub** (`mercumen/mixo`) | Repo şirket organizasyonuna taşınacak. Vercel'in Git bağlantısı taşımadan sonra yeniden kurulmalı (push→deploy zinciri kopmasın). Not: git remote'un adı `origin` değil `main` |
 | **Firebase** (`mixo-57b65`) | Proje sahipliği şirkete. Firestore bölgesi kalıcı, kontrol edilmeli |
 | **Cloudflare R2** | Hesap + bucket sahipliği |
 | **OpenAI** | Organizasyon + API anahtarı |
-| **Vercel** | Proje takıma taşınacak, **Pro plana geçilecek** |
+| **Vercel** (`mercumens-projects/mixo`, canlı: `mixo-rho.vercel.app`) | Proje şirket takımına taşınacak, **Pro plana geçilecek**. Taşımada tüm env değişkenleri kontrol edilmeli (14 değişken + `GATE_PASSWORD`, üç ortamda). Gerçek domain gelince `mixo-rho.vercel.app`'in geçtiği iki yer güncellenecek: Firebase Authorized domains + R2 CORS |
 | **Resend** | Hesap + doğrulanmış domain |
 | **Domain** | Tescil ve DNS yönetimi şirkete |
 
@@ -223,6 +224,11 @@ Devirde iptal edilip yenisi üretilecek:
 `Cloudflare → R2 → Manage R2 API Tokens → token'ı sil → yeni oluştur`
 
 OpenAI anahtarı da devirden sonra yenilenmeli.
+
+Site kilidinin parolası (`GATE_PASSWORD`) da sohbet geçmişine düştü — ama
+geçici: lansmanda kilitle birlikte tamamen siliniyor, ayrıca yenilemek
+gerekmiyor. Lansman gecikir ve kilit uzun süre açık kalırsa parolayı
+değiştirmek yeterli (env güncelle + redeploy).
 
 ### R2 endpoint tuzağı (devirde tekrar yaşanacak)
 Cloudflare'ın **token oluşturma ekranı yanlış endpoint gösteriyor**: jenerik
