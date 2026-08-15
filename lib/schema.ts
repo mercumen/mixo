@@ -201,5 +201,13 @@ export const paths = {
   /** EKRANIN DİNLEDİĞİ TEK DOKÜMAN — koleksiyon dinleyicisi kurulmayacak */
   feedLive: (eventId: string) => `events/${eventId}/feed/live`,
 
+  /**
+   * Beğeni sayaçları — TEK doküman, içinde photoId → sayı haritası.
+   *
+   * Fotoğraf başına doküman okumak misafir akışını her yenilemede 60 okumaya
+   * çıkarırdı; harita dokümanıyla akış 2 okuma (feed + likes).
+   */
+  feedLikes: (eventId: string) => `events/${eventId}/feed/likes`,
+
   missionTemplates: "missionTemplates",
 } as const;

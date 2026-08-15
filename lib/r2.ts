@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -55,6 +56,102 @@ export function photoKey(eventId: string, photoId: string) {
 }
 
 /**
+ * Mozaik referansının (logo / referans fotoğraf) R2'deki yolu.
+ *
+ * Zaman damgası var: aynı etkinliğe yeni logo yüklenince eski obje üzerine
+ * yazılmıyor, tarayıcı önbelleği bayat görsel göstermiyor. (Objeler
+ * `immutable` cache header'ı ile duruyor, aynı anahtara yazmak tehlikeli.)
+ */
+export function stageReferenceKey(
+  eventId: string,
+  kind: "logo" | "foto",
+  ext: string,
+) {
+  return `events/${eventId}/reference/${kind}-${Date.now()}.${ext}`;
+}
+
+/** CLAUDE.md kural 7: ekran aynı görseli saatlerce tekrar indirmesin. */
+export const R2_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+/**
+ * İmzalı PUT adresi.
+ *
+ * CACHE-CONTROL BURADA İMZALANMIYOR — bilinçli.
+ *
+ * Neden: presigned PUT'ta imzalanan header'ı tarayıcının da göndermesi
+ * gerekiyor, bu da bucket'ın CORS `AllowedHeaders` listesinde `cache-control`
+ * olmasını şart koşuyor. O liste elle yönetiliyor ve yeni ortamda unutulunca
+ * yükleme tamamen `Failed to fetch` ile ölüyor — sessiz bir ayak kapanı.
+ *
+ * Bunun yerine header'ı yükleme sonrası SUNUCU yazıyor (`applyCacheControl`).
+ * Böylece CORS'un `content-type` dışında hiçbir header'a izin vermesi
+ * gerekmiyor ve kural 7 elle yapılan bir ayara bağlı kalmıyor.
+ */
+export async function createUploadUrl(input: {
+  key: string;
+  contentType: string;
+  expiresInSeconds?: number;
+}) {
+  return getSignedUrl(
+    client(),
+    new PutObjectCommand({
+      Bucket: bucket(),
+      Key: input.key,
+      ContentType: input.contentType,
+    }),
+    { expiresIn: input.expiresInSeconds ?? 900 },
+  );
+}
+
+/**
+ * Yüklenen objeye Cache-Control header'ını yazar.
+ *
+ * Objeyi kendi üstüne kopyalayıp metadata'yı değiştiriyor — S3/R2'de bir
+ * objenin header'ını sonradan değiştirmenin yolu bu. Byte'lar R2 içinde
+ * kalıyor, bize inip çıkmıyor.
+ *
+ * Sessizce başarısız olmuyor ama çağıran taraf hatayı yutabilir: header
+ * yazılmasa da dosya kullanılabilir durumda, sadece önbelleklenmiyor.
+ */
+export async function applyCacheControl(key: string, contentType: string) {
+  await client().send(
+    new CopyObjectCommand({
+      Bucket: bucket(),
+      Key: key,
+      CopySource: `${bucket()}/${key}`,
+      MetadataDirective: "REPLACE",
+      ContentType: contentType,
+      CacheControl: R2_CACHE_CONTROL,
+    }),
+  );
+}
+
+/** Verilen anahtar için kısa ömürlü okuma adresi (panelde önizleme). */
+export async function createReadUrl(key: string, expiresInSeconds = 900) {
+  return getSignedUrl(
+    client(),
+    new GetObjectCommand({ Bucket: bucket(), Key: key }),
+    { expiresIn: expiresInSeconds },
+  );
+}
+
+/** Anahtar gerçekten indi mi + boyutu ve türü. */
+export async function headObject(key: string) {
+  try {
+    const head = await client().send(
+      new HeadObjectCommand({ Bucket: bucket(), Key: key }),
+    );
+    return {
+      bytes: head.ContentLength ?? 0,
+      contentType: head.ContentType ?? "application/octet-stream",
+      cacheControl: head.CacheControl ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Tarayıcının doğrudan PUT'layacağı imzalı adres.
  *
  * CLAUDE.md kural 1: fotoğraf byte'ları sunucudan GEÇMİYOR. Sunucu sadece bu
@@ -65,8 +162,9 @@ export function photoKey(eventId: string, photoId: string) {
  * adresi tekrar deniyor. Kısa tutarsak retry kuyruğu (kural 6) çalışmaz ve
  * misafirin hakkı boşa gider.
  *
- * Cache-Control burada imzalanıyor — obje indiği anda doğru header'la duruyor
- * (kural 7): ekran aynı fotoğrafı saatlerce tekrar indirmiyor.
+ * Cache-Control burada İMZALANMIYOR (bkz. createUploadUrl açıklaması):
+ * tarayıcının o header'ı göndermesi CORS'a bağımlılık yaratıyor. Header
+ * yükleme doğrulandıktan sonra sunucu tarafında yazılıyor.
  */
 export async function createPhotoUploadUrl(input: {
   eventId: string;
@@ -82,7 +180,6 @@ export async function createPhotoUploadUrl(input: {
       Bucket: bucket(),
       Key: key,
       ContentType: input.contentType ?? "image/jpeg",
-      CacheControl: "public, max-age=31536000, immutable",
     }),
     { expiresIn: input.expiresInSeconds ?? 1800 },
   );

@@ -373,12 +373,14 @@ export function SetupWizard({
                   />
                 ) : step === "sahne" ? (
                   <StepStage
+                    eventId={event?.id ?? null}
                     planId={planId}
                     mode={mode ?? defaultModeForPlan(planId)}
                     referenceKind={referenceKind}
-                    hasReferenceFile={event?.stageReferenceKey !== null}
+                    hasReferenceFile={Boolean(event?.stageReferenceKey)}
                     onModeChange={setMode}
                     onReferenceKindChange={setReferenceKind}
+                    onUploaded={() => router.refresh()}
                     disabled={busy}
                   />
                 ) : step === "gorevler" ? (

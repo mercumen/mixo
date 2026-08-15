@@ -1,13 +1,12 @@
 "use client";
 
-import { Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   referenceKinds,
   referenceShapes,
   type ReferenceKind,
 } from "@/lib/stage-templates";
 import { cn } from "@/lib/utils";
+import { ReferenceUpload, UploadIcon } from "../../_components/reference-upload";
 import { SectionHeading } from "../../_components/ui-bits";
 
 /**
@@ -17,22 +16,24 @@ import { SectionHeading } from "../../_components/ui-bits";
  * sekme olarak duruyor ve tek seçim yapılıyor.
  *
  * Yükleme R2'ye gidiyor (presigned PUT) — dosya sunucudan geçmiyor.
- * Bu tur sadece seçim kaydediliyor; dosya yükleme bağlanınca `onUpload`
- * doldurulacak.
  */
 export function MosaicReference({
+  eventId,
   kind,
   shape,
   hasFile,
   onKindChange,
   onShapeChange,
+  onUploaded,
   disabled,
 }: {
+  eventId: string;
   kind: ReferenceKind;
   shape: string | null;
   hasFile: boolean;
   onKindChange: (kind: ReferenceKind) => void;
   onShapeChange: (shape: string) => void;
+  onUploaded: () => void;
   disabled?: boolean;
 }) {
   return (
@@ -99,9 +100,7 @@ export function MosaicReference({
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card px-4 py-4">
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent">
-              <Upload className="size-4 text-primary" aria-hidden="true" />
-            </span>
+            <UploadIcon />
             <div className="min-w-0 flex-1">
               <p className="text-[12.5px] font-semibold">
                 {kind === "logo"
@@ -113,16 +112,14 @@ export function MosaicReference({
                   ? "Şeffaf zeminli PNG önerilir — logonun dolu alanları mozaiğin şeklini belirler. En az 600×600 px."
                   : "Yüksek kontrastlı, sade bir fotoğraf seçin. Mozaik uzaktan bakıldığında tanınır olmalı. En az 600×600 px."}
               </p>
-              {hasFile ? (
-                <p className="mt-1.5 text-[11px] font-medium text-primary">
-                  Dosya yüklendi
-                </p>
-              ) : null}
             </div>
-            {/* Yükleme R2'ye presigned PUT ile gidecek; henüz bağlanmadı */}
-            <Button size="sm" disabled className="shrink-0">
-              Dosya Seç
-            </Button>
+            <ReferenceUpload
+              eventId={eventId}
+              kind={kind === "foto" ? "foto" : "logo"}
+              hasFile={hasFile}
+              onUploaded={onUploaded}
+              variant="default"
+            />
           </div>
         )}
       </div>

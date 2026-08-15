@@ -1,7 +1,6 @@
 "use client";
 
-import { Info, Lock, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Info, Lock } from "lucide-react";
 import {
   lockedModesForPlan,
   modesForPlan,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/stage-templates";
 import { cn } from "@/lib/utils";
 import { TemplateThumb } from "@/app/dashboard/sahne/_components/template-thumb";
+import { ReferenceUpload, UploadIcon } from "../reference-upload";
 import { InfoNote } from "../ui-bits";
 
 /**
@@ -34,20 +34,25 @@ const previewFor: Record<StageMode, string> = {
 };
 
 export function StepStage({
+  eventId,
   planId,
   mode,
   referenceKind,
   hasReferenceFile,
   onModeChange,
   onReferenceKindChange,
+  onUploaded,
   disabled,
 }: {
+  /** Etkinlik henüz yaratılmadıysa null — yükleme o zaman kapalı */
+  eventId: string | null;
   planId: string | null;
   mode: StageMode | null;
   referenceKind: ReferenceKind;
   hasReferenceFile: boolean;
   onModeChange: (mode: StageMode) => void;
   onReferenceKindChange: (kind: ReferenceKind) => void;
+  onUploaded: () => void;
   disabled?: boolean;
 }) {
   const available = modesForPlan(planId);
@@ -156,9 +161,7 @@ export function StepStage({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl bg-accent/50 px-4 py-4">
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-card">
-              <Upload className="size-4 text-primary" aria-hidden="true" />
-            </span>
+            <UploadIcon />
             <div className="min-w-0 flex-1">
               <p className="text-[12.5px] font-semibold">
                 {referenceKind === "logo"
@@ -170,16 +173,20 @@ export function StepStage({
                   ? "Şeffaf zeminli PNG önerilir, logonun dolu alanları mozaiğin şeklini belirler. En az 600×600 px."
                   : "Yüksek kontrastlı, sade bir fotoğraf seçin. Mozaik uzaktan tanınır olmalı. En az 600×600 px."}
               </p>
-              {hasReferenceFile ? (
-                <p className="mt-1.5 text-[11px] font-medium text-primary">
-                  Dosya yüklendi
-                </p>
-              ) : null}
             </div>
-            {/* Yükleme R2'ye presigned PUT ile gidecek; henüz bağlanmadı */}
-            <Button variant="outline" size="sm" disabled className="shrink-0">
-              Dosya Seç
-            </Button>
+            {eventId ? (
+              <ReferenceUpload
+                eventId={eventId}
+                kind={referenceKind === "foto" ? "foto" : "logo"}
+                hasFile={hasReferenceFile}
+                onUploaded={onUploaded}
+              />
+            ) : (
+              // Etkinlik henüz yok: önce 2. adım onu yaratıyor
+              <p className="max-w-[180px] shrink-0 text-right text-[11px] text-muted-foreground">
+                Etkinlik kaydedildikten sonra yükleyebilirsin.
+              </p>
+            )}
           </div>
 
           <InfoNote className="mt-4" icon={<Info className="size-3.5" />}>

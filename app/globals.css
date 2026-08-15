@@ -228,6 +228,31 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Baskı. Masa kartı matbaaya gidebilecek şekilde çıkmalı.
+--------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4;
+    /* Karekodun çevresindeki sessiz bölge korunsun diye kenar boşluğu var */
+    margin: 18mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Kart tam ölçüsünde basılsın; tarayıcı ölçekleme yapmasın */
+  .table-card {
+    box-shadow: none !important;
+    /* Kart sayfa ortasında ve bölünmeden */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
 /* Öne çıkan (Professional) pricing kartının iç ışıması */
 @utility glow-card {
   background-image: radial-gradient(

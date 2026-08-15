@@ -3,7 +3,36 @@
 Bu dosya konuşarak verdiğimiz kararların ve ertelediğimiz işlerin kaydı.
 Unutulmaması gereken şeyler burada duruyor.
 
-Son güncelleme: 12 Ağustos 2026
+Son güncelleme: 15 Ağustos 2026
+
+---
+
+## 0. Misafir uygulaması notları (15 Ağustos)
+
+Misafir akışı (`/e/{kod}`) gönderilen tasarımlara göre kuruldu ve headless
+Chrome ile uçtan uca test edildi (oturum → görev → gerçek R2 yüklemesi →
+otomatik onay → feed → beğeni → silme). Bilinçli kararlar:
+
+- **Beğeni** tasarımda vardı, veri modeline eklendi: `feed/likes` TEK doküman
+  (photoId → sayı haritası). Akış isteği toplam 2 okuma. "Aynı kişi iki kez
+  beğenemesin" takibi istemcide (localStorage) — bu bir düğün eğlencesi,
+  oylama sistemi değil.
+- **KVKK açık rızası** isim ekranındaki "Devam ederek … onay vermiş olursun"
+  metniyle alınıyor (tasarımda ayrı kutu yoktu). Sunucu `consent: true`
+  gelmeden oturum açmıyor. Ayrı onay kutusu istenirse söyle, eklerim.
+- **Görev dağıtımı:** havuzda hak sayısından çok görev varsa her misafire
+  RASTGELE bir alt küme atanıyor (cihazda saklı) — ekranda hep aynı üç görev
+  dönmesin diye.
+- **Silme kredi iade etmiyor** (yükle-sil-yükle döngüsünü kesmek için).
+  Silme kalıcı: R2 objesi + doküman + feed karesi + beğeni sayacı.
+- **Tasarımdaki gerçek fotoğraflar** (polaroid dekorları) yerinde degrade
+  yer tutucular var — görseller gelince `Polaroid` bileşenine takılacak.
+- Test etkinliği: kod `ELIFCAN` (Elif & Can Düğünü) — **otomatik moderasyon
+  modunda** bırakıldı (boru hattını test etmek için). Ürün varsayılanı manuel;
+  gerçek demoda kendi etkinliğini kullan ya da bunu manuel moda çek.
+- Telefonda kamera için **HTTPS şart** (`getUserMedia` değil ama `capture`
+  kamerayı ancak güvenli bağlamda düzgün açıyor) → Vercel deploy sonrası
+  Vercel domainini R2 CORS `AllowedOrigins`a eklemeyi unutma (bkz. bölüm 1).
 
 ---
 
@@ -87,6 +116,43 @@ tarafından metin gelmeli, biz sayfaya dökeriz).
 
 Aynı şekilde footer'daki "Referans Etkinlikler" ve sosyal medya bağlantıları da
 gerçek adreslerle değişmeli.
+
+### ⚠️ R2 CORS politikası — YENİ BUCKET'TA TEKRAR GEREKİR
+Tarayıcı R2'ye doğrudan PUT ediyor (CLAUDE.md kural 1: byte'lar sunucudan
+geçmiyor). Bunun çalışması için bucket'ta **CORS politikası** olmak zorunda —
+yoksa istek sessizce `Failed to fetch` ile ölüyor.
+
+Sunucu tarafı testler CORS'a takılmadığı için bu hata **ancak tarayıcıdan
+denerken** ortaya çıkıyor. Yeni ortam kurulunca mutlaka kontrol edilmeli.
+
+`Cloudflare → R2 → bucket → Settings → CORS Policy`:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://GERCEK-ALAN-ADI"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["content-type", "cache-control"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+**`cache-control` LİSTEDEN ÇIKARILMAMALI.** Presigned PUT bu header'la
+imzalanıyor ve istemci onu göndermek zorunda (yoksa obje header'sız iniyor,
+istek yine başarılı olur — sessiz kayıp). CORS izin vermezse yükleme
+tamamen `Failed to fetch` ile ölüyor. Zincir şu:
+
+```
+CORS yok            → R2'ye hiç ulaşılamıyor
+CORS var, header yok → yükleme olur ama Cache-Control kaybolur (kural 7 bozulur)
+ikisi de var         → doğru
+```
+
+Not: API token'ı ile programatik yazılamıyor — `Object Read & Write` izni
+bucket ayarlarını kapsamıyor, `AccessDenied` dönüyor. Panelden yapılacak.
+Deploy edilen her yeni alan adı bu listeye eklenmeli.
 
 ### R2 lifecycle kuralı
 30 gün sonra otomatik silme (KVKK saklama süresi). Bucket oluşturulduktan

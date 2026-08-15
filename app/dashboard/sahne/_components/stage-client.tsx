@@ -160,6 +160,7 @@ export function StageClient({ event }: { event: EventDoc }) {
       {/* Referans sadece hedef görsel oluşturan şablonlarda anlamlı */}
       {needsReference(selected) ? (
         <MosaicReference
+          eventId={event.id}
           kind={kind}
           shape={shape}
           hasFile={event.stageReferenceKey !== null}
@@ -172,6 +173,7 @@ export function StageClient({ event }: { event: EventDoc }) {
             setShape(sh);
             void save({ stageReferenceShape: sh, stageReferenceKind: "sekil" });
           }}
+          onUploaded={() => router.refresh()}
         />
       ) : null}
 

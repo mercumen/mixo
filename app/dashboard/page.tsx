@@ -7,7 +7,6 @@ import {
   MapPin,
   Pencil,
   Printer,
-  QrCode,
   ShieldCheck,
   Sparkles,
   UserPlus,
@@ -22,6 +21,8 @@ import { Countdown } from "./_components/countdown";
 import { NoEventState } from "./_components/empty-state";
 import { SetupWizard } from "./_components/setup-wizard/setup-wizard";
 import { InfoNote, SectionHeading } from "./_components/ui-bits";
+import { qrDataUrl } from "@/lib/qr";
+import { QrDownloadModal } from "./_components/qr-download-modal";
 import { getDashboardContext } from "./_lib/context";
 import { listMissions } from "./_lib/data";
 import {
@@ -66,6 +67,8 @@ export default async function OverviewPage({
   }
 
   const missions = await listMissions(event.id);
+  // QR sunucuda üretiliyor: `qrcode` paketi istemci paketine girmiyor
+  const qrImage = await qrDataUrl(event.code, 512);
   const completed = event.completedSteps ?? [];
   const progress = progressFromSteps(completed);
   const next = nextIncompleteStep(completed);
@@ -97,7 +100,12 @@ export default async function OverviewPage({
         />
         <div className="space-y-5">
           <TeamInviteCard />
-          <DemoQrCard code={event.code} />
+          <DemoQrCard
+            code={event.code}
+            qrImage={qrImage}
+            eventName={event.name}
+            printDeadline={printDeadlineFor(event.startsAt)}
+          />
         </div>
         <div className="space-y-5">
           <CountdownCard event={event} />
@@ -335,7 +343,34 @@ function TeamInviteCard() {
   );
 }
 
-function DemoQrCard({ code }: { code: string }) {
+/**
+ * Baskı için son tarih — etkinlikten 1 hafta önce.
+ * Matbaa provası ve renk kontrolü için pay bırakıyoruz (tasarımdaki uyarı).
+ */
+function printDeadlineFor(startsAt: string | null): string | null {
+  if (!startsAt) return null;
+  const d = new Date(startsAt);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() - 7);
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Istanbul",
+  }).format(d);
+}
+
+function DemoQrCard({
+  code,
+  qrImage,
+  eventName,
+  printDeadline,
+}: {
+  code: string;
+  qrImage: string;
+  eventName: string;
+  printDeadline: string | null;
+}) {
   return (
     <Card className="gap-0 p-5">
       <SectionHeading
@@ -343,15 +378,13 @@ function DemoQrCard({ code }: { code: string }) {
         description="Canlıya almadan önce son adımlar"
       />
       <div className="mt-5 flex flex-col items-center">
-        {/* QR görseli sunucuda üretilecek; şimdilik kod metni gösteriliyor */}
-        <div
-          role="img"
-          aria-label="Test QR kodu yer tutucu"
-          className="grid size-[132px] place-items-center rounded-lg border border-dashed border-border bg-muted"
-        >
-          <QrCode
-            className="size-14 text-muted-foreground/60"
-            aria-hidden="true"
+        {/* Gerçek QR — sunucuda üretiliyor, misafir adresini taşıyor */}
+        <div className="rounded-lg border border-border bg-white p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- data URL */}
+          <img
+            src={qrImage}
+            alt={`${eventName} etkinliği için QR kodu`}
+            className="size-[116px]"
           />
         </div>
         <p className="mt-3 font-mono text-[13px] font-semibold tracking-widest">
@@ -361,19 +394,25 @@ function DemoQrCard({ code }: { code: string }) {
           Test için misafir akışını görüntüle
         </p>
         <div className="mt-3 grid w-full grid-cols-2 gap-2">
-          <Button variant="outline" size="sm" className="text-[12px]" disabled>
-            Kodu Büyüt
+          <Button asChild variant="outline" size="sm" className="text-[12px]">
+            <Link href={`/e/${code}`} target="_blank">
+              Kodu Büyüt
+            </Link>
           </Button>
-          <Button variant="outline" size="sm" className="text-[12px]" disabled>
-            Kodu İndir
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </Button>
+          <QrDownloadModal
+            eventName={eventName}
+            code={code}
+            qrDataUrl={qrImage}
+            printDeadline={printDeadline}
+          />
         </div>
-        <InfoNote className="mt-4" icon={<Printer className="size-3.5" />}>
-          Baskı alacaksanız etkinlikten en az{" "}
-          <strong className="font-semibold">1 hafta önce</strong> matbaaya verin;
-          provada renk ve kod okunurluğunu kontrol edin.
-        </InfoNote>
+        {printDeadline ? (
+          <InfoNote className="mt-4" icon={<Printer className="size-3.5" />}>
+            Baskı alacaksanız en geç{" "}
+            <strong className="font-semibold">{printDeadline}</strong> tarihinde
+            matbaaya verin; provada renk ve kod okunurluğunu kontrol edin.
+          </InfoNote>
+        ) : null}
       </div>
     </Card>
   );
