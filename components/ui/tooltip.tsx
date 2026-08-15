@@ -21,7 +21,14 @@ function TooltipProvider({
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  // Provider'ı içeride kuruyoruz: shadcn'in güncel kalıbı. Sidebar gibi
+  // tüketiciler <Tooltip>'i tek başına kullanıyor; sağlayıcıyı unutmak
+  // runtime'da "must be used within TooltipProvider" ile sayfayı çökertiyor.
+  return (
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
 }
 
 function TooltipTrigger({
