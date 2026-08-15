@@ -38,6 +38,17 @@ otomatik onay → feed → beğeni → silme). Bilinçli kararlar:
 
 ## 1. Ertelenen işler (v1'de yok, sırası gelince)
 
+### firebase-admin v13'te sabit (Vercel kısıtı) — 15 Ağustos
+**Ne oldu:** v14, `jwks-rsa@4 → jose@6` (sadece ESM) zincirini `require()` ile
+yüklüyor. Vercel, Next.js fonksiyonlarını `--no-experimental-require-module`
+bayrağıyla başlattığı için bu production'da `ERR_REQUIRE_ESM` ile patladı
+(lokalde Node 24 özelliği açık olduğundan çalışıyordu — sinsi fark).
+Google girişindeki "hesap hazırlanamadı" hatasının kök nedeni buydu.
+
+**Yapılacak:** firebase-admin'i v14+'a yükseltmeden önce Vercel'in
+`require(esm)` desteğini kontrol et — kanıt: `/api/debug-node` gibi geçici bir
+uçtan `process.execArgv` okumak. Bayrak kalktıysa yükseltilebilir.
+
 ### Mail altyapısı — kendi domainimizden gönderim
 **Neden gerekli:** Firebase'in şifre sıfırlama maili `noreply@mixo-57b65.firebaseapp.com`
 adresinden gidiyor ve **Gmail'de spam'e düşüyor** (test edildi, 12 Ağustos). Sebep:
