@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/session";
+import { GATE_COOKIE, gateToken } from "@/lib/gate";
 
 /**
  * Panel için ilk kapı. (Next 16'da bu dosyanın adı `proxy.ts` — `middleware.ts`
@@ -27,20 +28,54 @@ import { SESSION_COOKIE } from "@/lib/auth/session";
  * proxy tekrar /dashboard'a atardı ve sonsuz döngü olurdu.
  */
 export function proxy(request: NextRequest) {
-  const hasSession = request.cookies.has(SESSION_COOKIE);
+  const { pathname } = request.nextUrl;
 
-  if (!hasSession) {
-    const url = new URL("/giris", request.url);
-    // Giriş sonrası kullanıcıyı gitmek istediği sayfaya döndürebilmek için
-    url.searchParams.set("devam", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+  /**
+   * ---- SİTE KİLİDİ (geçici, lansmana kadar) ----------------------------
+   * Proje gizli: parolayı bilmeyen HİÇBİR sayfayı göremiyor. Kilit ekranı
+   * ve parola doğrulama ucu hariç her yol çerez ister. Kaldırma talimatı
+   * lib/gate.ts başında.
+   */
+  if (pathname !== "/kilit" && pathname !== "/api/gate") {
+    const expected = gateToken();
+    const unlocked =
+      expected !== null &&
+      request.cookies.get(GATE_COOKIE)?.value === expected;
+
+    // GATE_PASSWORD tanımsızsa kilit devre dışı (env'i silmek = kilidi kaldırmak)
+    if (expected !== null && !unlocked) {
+      // API çağrıları HTML redirect değil dürüst bir 401 alsın
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Kilitli." }, { status: 401 });
+      }
+      const url = new URL("/kilit", request.url);
+      if (pathname !== "/") url.searchParams.set("devam", pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // ---- Panel koruması (kalıcı) -------------------------------------------
+  if (pathname.startsWith("/dashboard")) {
+    const hasSession = request.cookies.has(SESSION_COOKIE);
+    if (!hasSession) {
+      const url = new URL("/giris", request.url);
+      // Giriş sonrası kullanıcıyı gitmek istediği sayfaya döndürebilmek için
+      url.searchParams.set("devam", pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Sadece panel. Pazarlama sitesi, kurulum akışı ve API rotaları serbest —
-  // API'ler kendi token doğrulamalarını yapıyor.
-  matcher: ["/dashboard", "/dashboard/:path*"],
+  /**
+   * Kilit yüzünden artık neredeyse her yol eşleşiyor. Hariç tutulanlar:
+   * Next'in kendi statikleri (font/chunk — kilit sayfasının da ihtiyacı var)
+   * ve dosya uzantılı public varlıklar (favicon vs.). Sayfa İÇERİĞİ değil
+   * süs dosyaları; sızdırdıkları bir şey yok.
+   */
+  matcher: [
+    "/((?!_next/|favicon\\.ico|.*\\.(?:png|jpg|jpeg|webp|svg|ico|txt|xml|webmanifest)$).*)",
+  ],
 };
