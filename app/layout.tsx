@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 
 /**
  * Gövde yüzü. Değişken adı bilerek `--font-sans`: shadcn'in `@theme inline`
