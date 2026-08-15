@@ -38,6 +38,15 @@ otomatik onay → feed → beğeni → silme). Bilinçli kararlar:
 
 ## 1. Ertelenen işler (v1'de yok, sırası gelince)
 
+### LANSMANDA SİTE KİLİDİNİ KALDIR — 15 Ağustos
+Proje gizli olduğu için tüm site tek parolalık kilit arkasında (`/kilit`).
+Kaldırmak için: `lib/gate.ts` + `app/kilit/` + `app/api/gate/` sil,
+`proxy.ts`'teki kilit bloğunu ve matcher genişletmesini geri al,
+`GATE_PASSWORD` env'ini lokalden ve Vercel'in üç ortamından sil.
+**Kilit açıkken Google siteyi indeksleyemez** — lansmandan önce kaldırılmazsa
+SEO sıfırdan başlar. Cumartesi demosunda misafir telefonları da parola
+soracak; istenirse `/e/` yolları tek satırla muaf tutulabilir.
+
 ### firebase-admin v13'te sabit (Vercel kısıtı) — 15 Ağustos
 **Ne oldu:** v14, `jwks-rsa@4 → jose@6` (sadece ESM) zincirini `require()` ile
 yüklüyor. Vercel, Next.js fonksiyonlarını `--no-experimental-require-module`
