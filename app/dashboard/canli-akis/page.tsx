@@ -1,12 +1,20 @@
-import { Heart, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { PhotoPlaceholder } from "../_components/photo-placeholder";
 import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
+import { listEventPhotos, photoStats, type DashboardPhoto } from "../_lib/data";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
-import { approvedPhotos, feedStats, reviewQueue } from "../_lib/mock";
+import { ReviewButtons, RemoveFromFeedButton } from "./_components/photo-actions";
 
+/**
+ * Canlı Akış — moderasyon kuyruğu + onaylı duvar.
+ *
+ * Fotoğraflar R2'de private duruyor; buradaki `img` etiketleri kısa ömürlü
+ * imzalı adresleri gösteriyor (sunucuda üretiliyor, bkz. listEventPhotos).
+ * `next/image` KULLANILMIYOR: imzalı adresler her istekte değişen sorgu
+ * dizesi taşıyor, Next'in optimizasyon önbelleği bunlarla anlamsızlaşıyor
+ * ve R2 host'unu `remotePatterns`a eklemek gerekiyordu.
+ */
 export default async function LiveFeedPage() {
   const { event } = await getDashboardContext();
 
@@ -23,6 +31,13 @@ export default async function LiveFeedPage() {
     );
   }
 
+  const photos = await listEventPhotos(event.id);
+  const stats = photoStats(photos);
+  const queue = photos.filter(
+    (p) => p.status === "pending" || p.status === "manual_review",
+  );
+  const approved = photos.filter((p) => p.status === "approved");
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -31,85 +46,100 @@ export default async function LiveFeedPage() {
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Toplam Fotoğraf" value={feedStats.total} />
-        <StatTile label="İnceleme Bekleyen" value={feedStats.pending} accent />
-        <StatTile label="Onaylı" value={feedStats.approved} />
-        <StatTile label="Reddedilen" value={feedStats.rejected} />
+        <StatTile label="Toplam Fotoğraf" value={stats.total} />
+        <StatTile label="İnceleme Bekleyen" value={stats.pending} accent />
+        <StatTile label="Onaylı" value={stats.approved} />
+        <StatTile label="Reddedilen" value={stats.rejected} />
       </div>
 
       <section>
-        <SectionHeading title={`İnceleme Kuyruğu (${reviewQueue.length})`} />
-        {/* Yatay kaydırma: kuyruk uzayınca sayfa aşağı büyümesin */}
-        <div className="mt-4 -mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-          {reviewQueue.map((photo) => (
-            <Card key={photo.id} className="w-[230px] shrink-0 gap-0 overflow-hidden p-0">
-              <PhotoPlaceholder
-                ratio={photo.ratio}
-                label={photo.task}
-                className="rounded-none border-0 border-b"
-              />
-              <div className="p-3">
-                <p className="truncate text-[12.5px] font-semibold">{photo.guest}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
-                  {photo.task}
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="bg-accent text-[12px] text-accent-foreground hover:bg-accent/80"
-                  >
-                    Onayla
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-[12px]">
-                    Reddet
-                  </Button>
+        <SectionHeading title={`İnceleme Kuyruğu (${queue.length})`} />
+        {queue.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-8 text-center text-[12.5px] text-muted-foreground">
+            Onay bekleyen fotoğraf yok.
+          </p>
+        ) : (
+          /* Yatay kaydırma: kuyruk uzayınca sayfa aşağı büyümesin */
+          <div className="mt-4 -mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
+            {queue.map((photo) => (
+              <Card
+                key={photo.id}
+                className="w-[230px] shrink-0 gap-0 overflow-hidden p-0"
+              >
+                <PhotoImage photo={photo} className="aspect-[4/3]" />
+                <div className="p-3">
+                  <p className="truncate text-[12.5px] font-semibold">
+                    {photo.guest}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                    {photo.task}
+                  </p>
+                  <ReviewButtons eventId={event.id} photoId={photo.id} />
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <section>
         <SectionHeading
           title="Onaylı Akış"
-          description="Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin."
+          description="Ekranda ve misafirlerin telefonunda dönen kareler."
         />
-        {/* Masonry: CSS columns — kart yükseklikleri fotoğraf oranına göre değişiyor */}
-        <div className="mt-4 columns-2 gap-4 lg:columns-3 xl:columns-4 [&>*]:mb-4">
-          {approvedPhotos.map((photo) => (
-            <Card
-              key={photo.id}
-              className="relative break-inside-avoid gap-0 overflow-hidden p-0"
-            >
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute top-2 right-2 z-10 size-7 bg-card/85 text-muted-foreground backdrop-blur hover:text-destructive"
-                aria-label={`Akıştan kaldır: ${photo.task}`}
+        {approved.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-8 text-center text-[12.5px] text-muted-foreground">
+            Henüz onaylı fotoğraf yok.
+          </p>
+        ) : (
+          /* Masonry: CSS columns — kart yükseklikleri fotoğraf oranına göre değişiyor */
+          <div className="mt-4 columns-2 gap-4 lg:columns-3 xl:columns-4 [&>*]:mb-4">
+            {approved.map((photo) => (
+              <Card
+                key={photo.id}
+                className="relative break-inside-avoid gap-0 overflow-hidden p-0"
               >
-                <Trash2 className="size-3.5" />
-              </Button>
-              <PhotoPlaceholder
-                ratio={photo.ratio}
-                label={photo.task}
-                className="rounded-none border-0"
-              />
-              <div className="p-3">
-                <p className="truncate text-[12px] font-semibold">{photo.guest}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
-                  {photo.task}
-                </p>
-                <p className="mt-2 flex items-center gap-1 text-[11px] text-primary">
-                  <Heart className="size-3 fill-current" aria-hidden="true" />
-                  {photo.likes}
-                </p>
-              </div>
-            </Card>
-          ))}
-        </div>
+                <RemoveFromFeedButton
+                  eventId={event.id}
+                  photoId={photo.id}
+                  task={photo.task}
+                />
+                <PhotoImage photo={photo} />
+                <div className="p-3">
+                  <p className="truncate text-[12px] font-semibold">
+                    {photo.guest}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                    {photo.task}
+                  </p>
+                  <p className="mt-2 flex items-center gap-1 text-[11px] text-primary">
+                    <Heart className="size-3 fill-current" aria-hidden="true" />
+                    {photo.likes}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
     </div>
+  );
+}
+
+function PhotoImage({
+  photo,
+  className,
+}: {
+  photo: DashboardPhoto;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={photo.url}
+      alt={photo.task || `${photo.guest} tarafından yüklenen fotoğraf`}
+      loading="lazy"
+      className={`w-full bg-muted object-cover ${className ?? ""}`}
+    />
   );
 }
