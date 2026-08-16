@@ -38,5 +38,34 @@ export const publicEnv = {
     ),
   },
   /** Misafir QR linkleri ve davet mailleri bu adrese göre üretilir. */
-  appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  appUrl: resolveAppUrl(),
 } as const;
+
+/**
+ * Uygulamanın kendi adresi.
+ *
+ * `??` YETMİYOR: Vercel'de değişken tanımlı ama BOŞ olabiliyor (panelden
+ * değer girilmeden kaydedilirse). `?? ` boş string'i yakalamıyor, adres ""
+ * kalıyor ve QR'a `/e/KOD` gibi origin'siz bir metin gömülüyor — telefon
+ * kamerası bunu açamıyor, hata da vermiyor. Yaşandı; o yüzden `.trim()`
+ * ile boşluk da boş sayılıyor.
+ *
+ * Değişken hiç yoksa Vercel'in sistem değişkenlerine düşüyoruz: önce
+ * projenin kalıcı production adresi, sonra o anki deploy adresi (preview
+ * dağıtımları için — her deploy farklı adres alıyor, elle giremeyiz).
+ * Bu bir kolaylık değil emniyet kemeri: doğru davranış `NEXT_PUBLIC_APP_URL`i
+ * gerçek alan adına ayarlamak.
+ */
+function resolveAppUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return explicit;
+
+  const production =
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (production) return `https://${production}`;
+
+  const deployment = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  if (deployment) return `https://${deployment}`;
+
+  return "http://localhost:3000";
+}
