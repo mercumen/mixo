@@ -36,10 +36,26 @@ export type SessionResponse = {
   missions: Mission[];
 };
 
+/**
+ * İstek zaman aşımı.
+ *
+ * ŞART: mobil şebeke bağlantıyı reddetmek yerine ASKIDA bırakabiliyor —
+ * `fetch` o zaman ne çözülüyor ne reddediliyor, sonsuza kadar bekliyor.
+ * Açılış isteği böyle takılınca misafir nabız atan logoya bakakalıyordu
+ * (sahada yaşandı). Zaman aşımı bunu bir HATAYA çeviriyor; hatayı zaten
+ * ele alan yollar (SSR penceresiyle devam, "Tekrar Dene") devreye giriyor.
+ */
+const TIMEOUT_MS = 12_000;
+
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(input, init);
+    res = await fetch(input, {
+      ...init,
+      // AbortSignal.timeout: iOS 16+ ve Chrome 103+; daha eskisinde
+      // signal `undefined` kalıyor, davranış eski haline dönüyor.
+      signal: AbortSignal.timeout?.(TIMEOUT_MS),
+    });
   } catch {
     // Mekan interneti: fetch'in kendisi patladıysa insan diliyle söyle
     throw new Error("Bağlantı kurulamadı. İnternetini kontrol et.");
