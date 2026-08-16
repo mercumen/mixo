@@ -1,8 +1,7 @@
-import { Check, GripVertical, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { GripVertical, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -17,6 +16,12 @@ import { getDashboardContext } from "../_lib/context";
 import { listMissions, missionStats } from "../_lib/data";
 import { eventTypeLabel } from "../_lib/format";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
+import {
+  AddMissionButton,
+  AiReviewButtons,
+  DeleteMissionButton,
+  MissionToggle,
+} from "./_components/mission-controls";
 
 /** Panelde "Kaynak" kolonunda görünen etiketler. */
 const sourceLabels: Record<MissionDoc["source"], string> = {
@@ -52,11 +57,9 @@ export default async function TasksPage() {
         description="Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin."
         actions={
           <>
-            <Button variant="outline" size="sm" disabled>
-              <Plus className="size-3.5" aria-hidden="true" />
-              Manuel Görev Ekle
-            </Button>
-            <Button size="sm" disabled>
+            <AddMissionButton eventId={event.id} />
+            {/* AI üretimi henüz bağlı değil (OpenAI + paket kısıtı ayrı iş) */}
+            <Button size="sm" disabled title="Yakında">
               AI ile Görev Üret
             </Button>
           </>
@@ -76,11 +79,13 @@ export default async function TasksPage() {
 
           {/* Onay kuyruğu sadece bekleyen AI görevi varken görünüyor.
               Şablondan kopyalanan görevler onaylı doğuyor. */}
-          {pendingAi.length > 0 ? <PendingAiCard missions={pendingAi} /> : null}
+          {pendingAi.length > 0 ? (
+            <PendingAiCard missions={pendingAi} eventId={event.id} />
+          ) : null}
         </div>
       </div>
 
-      <TaskTable missions={missions} />
+      <TaskTable missions={missions} eventId={event.id} />
     </div>
   );
 }
@@ -135,26 +140,18 @@ function EngineCard({
   );
 }
 
-function PendingAiCard({ missions }: { missions: MissionDoc[] }) {
+function PendingAiCard({
+  missions,
+  eventId,
+}: {
+  missions: MissionDoc[];
+  eventId: string;
+}) {
   return (
     <Card className="gap-0 p-4">
       <SectionHeading
         title={`Onay Bekleyen AI Görevleri (${missions.length})`}
         description="Canlıya almadan önce son adımlar"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-accent text-[12px] text-accent-foreground hover:bg-accent/80"
-            >
-              Tümünü Onayla
-            </Button>
-            <Button variant="outline" size="sm" className="text-[12px]">
-              Tümünü Reddet
-            </Button>
-          </>
-        }
       />
 
       <ul className="mt-4 divide-y divide-border">
@@ -164,24 +161,11 @@ function PendingAiCard({ missions }: { missions: MissionDoc[] }) {
             <span className="min-w-0 flex-1 truncate text-[12.5px]">
               {mission.label}
             </span>
-            <span className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-primary hover:bg-accent"
-                aria-label={`Onayla: ${mission.label}`}
-              >
-                <Check className="size-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-destructive"
-                aria-label={`Reddet: ${mission.label}`}
-              >
-                <X className="size-3.5" />
-              </Button>
-            </span>
+            <AiReviewButtons
+              eventId={eventId}
+              missionId={mission.id}
+              label={mission.label}
+            />
           </li>
         ))}
       </ul>
@@ -189,7 +173,13 @@ function PendingAiCard({ missions }: { missions: MissionDoc[] }) {
   );
 }
 
-function TaskTable({ missions }: { missions: MissionDoc[] }) {
+function TaskTable({
+  missions,
+  eventId,
+}: {
+  missions: MissionDoc[];
+  eventId: string;
+}) {
   return (
     <div>
       <SectionHeading
@@ -238,23 +228,22 @@ function TaskTable({ missions }: { missions: MissionDoc[] }) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Switch
-                      defaultChecked={task.active}
-                      aria-label={`${task.label} görevini aç/kapat`}
+                    <MissionToggle
+                      eventId={eventId}
+                      missionId={task.id}
+                      label={task.label}
+                      active={task.active}
                     />
                   </TableCell>
                   <TableCell className="text-[12px] text-muted-foreground">
                     {task.completions} kez
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 text-muted-foreground hover:text-destructive"
-                      aria-label={`Sil: ${task.label}`}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    <DeleteMissionButton
+                      eventId={eventId}
+                      missionId={task.id}
+                      label={task.label}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
