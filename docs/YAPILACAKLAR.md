@@ -47,6 +47,27 @@ Kaldırmak için: `lib/gate.ts` + `app/kilit/` + `app/api/gate/` sil,
 SEO sıfırdan başlar. Cumartesi demosunda misafir telefonları da parola
 soracak; istenirse `/e/` yolları tek satırla muaf tutulabilir.
 
+### AI Gateway bedava katmanı DEMO İÇİN RİSKLİ — 16 Ağustos
+Görev üretimi Vercel AI Gateway'den geçiyor (`lib/mission-ai.ts`).
+Bedava katmanın iki kısıtı ölçüldü:
+
+1. **Model kısıtı:** sadece `gemini-2.5-flash-lite`, `gpt-5-nano` ve
+   `qwen3.7-flash` açık. Diğerleri "Free tier users do not have access".
+2. **Hız sınırı:** birkaç istek sonrası kilitleniyor, ~90 sn sonra açılıyor.
+
+**Etkinlik gününde risk:** organizatör arka arkaya üretim denerse sınır
+yer ve buton hata verir. **Çözüm: Gateway'e küçük bir tutar kredi yükle**
+(vercel.com/[takım]/~/ai → Top up). Gerçek kullanımda aylık maliyet
+1-2 doları geçmiyor; kredi hem sınırı kaldırıyor hem daha iyi modelleri
+(`gemini-3.1-flash-lite`, `gpt-5-mini`) açıyor.
+
+**Ayrıca:** `gemini-2.5-flash-lite` Google tarafından **16 Ekim 2026'da**
+emekliye ayrılıyor. O tarihten önce model değiştirilmeli — tek sabit,
+`lib/mission-ai.ts` içindeki `MODEL`.
+
+**Sohbete düşen anahtarlar (devirde iptal edilecekler listesine ek):**
+iki adet AI Gateway anahtarı (`vck_6NSb…`, `vck_50kO…`).
+
 ### firebase-admin v13'te sabit (Vercel kısıtı) — 15 Ağustos
 **Ne oldu:** v14, `jwks-rsa@4 → jose@6` (sadece ESM) zincirini `require()` ile
 yüklüyor. Vercel, Next.js fonksiyonlarını `--no-experimental-require-module`
