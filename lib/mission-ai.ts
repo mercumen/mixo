@@ -18,7 +18,24 @@ import { eventTypes } from "@/app/(onboarding)/_lib/event-setup";
  * aşağıdaki tek sabit değişiyor, başka hiçbir yere dokunulmuyor.
  */
 
-const MODEL = "google/gemini-3.1-flash-lite";
+/**
+ * MODEL SEÇİMİ ÖLÇÜMLE YAPILDI (16 Ağustos), tahminle değil.
+ *
+ * Gateway'in bedava katmanında sadece üç model çalışıyor; aynı prompt'la
+ * üçü de denendi:
+ *
+ *   gemini-2.5-flash-lite  →   974 ms,   89 token, Türkçesi doğal ✅
+ *   openai/gpt-5-nano      → 37600 ms, 5688 token, Türkçesi bozuk
+ *   alibaba/qwen3.7-flash  → 44000 ms, 4494 token, Türkçesi bozuk
+ *
+ * İki alternatif de akıl yürüten (reasoning) model: 40 kat yavaşlar,
+ * 50 kat token yakarlar ve karşılığında daha KÖTÜ Türkçe üretirler
+ * ("Çek Elif kahvesini yudumlarken neşesini yakın çek.").
+ *
+ * Ücretli krediye geçilirse `gemini-3.1-flash-lite` ve `gpt-5-mini` de
+ * açılıyor; o zaman aynı prompt'la tekrar ölçüp buradan değiştirilebilir.
+ */
+const MODEL = "google/gemini-2.5-flash-lite";
 const ENDPOINT = "https://ai-gateway.vercel.sh/v1/chat/completions";
 
 /** Tek çağrıda üretilecek görev sayısı. */
