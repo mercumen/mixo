@@ -16,10 +16,13 @@ import { getDashboardContext } from "../_lib/context";
 import { listMissions, missionStats } from "../_lib/data";
 import { eventTypeLabel } from "../_lib/format";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
+import { planHasAiMissions } from "@/lib/plans";
+import { missionTones } from "@/lib/mission-tones";
 import {
   AddMissionButton,
   AiReviewButtons,
   DeleteMissionButton,
+  GenerateMissionsButton,
   MissionToggle,
 } from "./_components/mission-controls";
 
@@ -58,16 +61,20 @@ export default async function TasksPage() {
         actions={
           <>
             <AddMissionButton eventId={event.id} />
-            {/* AI üretimi henüz bağlı değil (OpenAI + paket kısıtı ayrı iş) */}
-            <Button size="sm" disabled title="Yakında">
-              AI ile Görev Üret
-            </Button>
+            <GenerateMissionsButton
+              eventId={event.id}
+              allowed={planHasAiMissions(event.planId)}
+            />
           </>
         }
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <EngineCard themeLabel={eventTypeLabel(event.typeId)} subject={event.name} />
+        <EngineCard
+          themeLabel={eventTypeLabel(event.typeId)}
+          subject={event.missionSubject || event.name}
+          toneId={event.missionTone}
+        />
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -93,10 +100,13 @@ export default async function TasksPage() {
 function EngineCard({
   themeLabel,
   subject,
+  toneId,
 }: {
   themeLabel: string;
   subject: string;
+  toneId: string | null;
 }) {
+  const tone = missionTones.find((t) => t.id === toneId);
   return (
     <Card className="gap-0 p-4">
       <div className="flex items-center gap-2">
@@ -127,8 +137,14 @@ function EngineCard({
         <div>
           <dt className="text-[11px] text-muted-foreground">Görev Tonu</dt>
           {/* Ton kurulum sihirbazının Görev Havuzu adımında seçiliyor */}
-          <dd className="mt-0.5 text-[12.5px] text-muted-foreground">
-            Henüz belirlenmedi
+          <dd
+            className={
+              tone
+                ? "mt-0.5 text-[12.5px]"
+                : "mt-0.5 text-[12.5px] text-muted-foreground"
+            }
+          >
+            {tone ? `${tone.label} — ${tone.hint}` : "Henüz belirlenmedi"}
           </dd>
         </div>
       </dl>

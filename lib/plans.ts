@@ -87,6 +87,20 @@ export function findPlan(id: string | null): Plan | null {
   return id ? (plans.find((p) => p.id === id) ?? null) : null;
 }
 
+/**
+ * AI görev üretimi hangi paketlerde açık?
+ *
+ * Essential'da havuz ELLE dolduruluyor: etkinlik tipine göre kopyalanan
+ * hazır şablonlar + organizatörün manuel eklediği görevler. Üst paketlerde
+ * bunun üstüne AI üretimi geliyor.
+ *
+ * Bilinmeyen/boş paket `false` sayılıyor — paket seçilmeden AI çalışmıyor,
+ * çünkü ücretli bir çağrıyı paketsiz bir kayda bağlamak istemiyoruz.
+ */
+export function planHasAiMissions(planId: string | null): boolean {
+  return planId === "professional" || planId === "enterprise";
+}
+
 export function isPlanId(value: unknown): value is PlanId {
   return typeof value === "string" && plans.some((p) => p.id === value);
 }

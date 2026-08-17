@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Check, Plus, Trash2, X } from "lucide-react";
+import { Check, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -120,6 +120,77 @@ export function AddMissionButton({ eventId }: { eventId: string }) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/**
+ * AI ile görev üretimi.
+ *
+ * Paket yetmiyorsa buton GÖRÜNÜR ama kilitli — konuştuğumuz asimetrik
+ * kural: alt paket üsttekini görüp yükseltmeyi düşünsün.
+ *
+ * Üretim birkaç saniye sürüyor; bu sürede butonun "Üretiliyor…" demesi
+ * şart, yoksa organizatör tekrar tekrar basıp para yakıyor.
+ */
+export function GenerateMissionsButton({
+  eventId,
+  allowed,
+}: {
+  eventId: string;
+  allowed: boolean;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function generate() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/events/${eventId}/missions/generate`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error ?? "Görevler üretilemedi.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Bağlanılamadı, tekrar deneyin.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!allowed) {
+    return (
+      <Button
+        size="sm"
+        disabled
+        title="AI görev üretimi Professional ve üstü paketlerde"
+      >
+        <Sparkles className="size-3.5" aria-hidden="true" />
+        AI ile Görev Üret
+      </Button>
+    );
+  }
+
+  return (
+    <span className="flex flex-col items-end gap-1">
+      <Button size="sm" disabled={busy} onClick={() => void generate()}>
+        <Sparkles className="size-3.5" aria-hidden="true" />
+        {busy ? "Üretiliyor…" : "AI ile Görev Üret"}
+      </Button>
+      {error && (
+        <span role="alert" className="max-w-[280px] text-right text-[11px] text-destructive">
+          {error}
+        </span>
+      )}
+    </span>
   );
 }
 
