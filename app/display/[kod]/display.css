@@ -1,0 +1,158 @@
+/**
+ * Ekran uygulamasının stili — demo'daki sahne değerleri birebir korundu
+ * (#stage, #vignette, sayaç tipografisi). Demo'nun kontrol çubuğu ve ayar
+ * paneli stilleri GELMEDİ; onların yerine misafirin görmediği, fare
+ * durunca kaybolan küçük bir operatör çubuğu var.
+ *
+ * Tailwind kullanılmıyor: bu sahne demo'dan geliyor ve piksel düzeyinde
+ * ona sadık kalması isteniyor (CLAUDE.md: "ekran piksel düzeyinde önemli").
+ * Token'lara çevirmek görsel kaymaya davetiye olurdu.
+ */
+
+.display-shell {
+  --ink: #f3e7da;
+  --ink-dim: #b9a392;
+  --gold: #d8a24a;
+  --gold-dim: rgba(216, 162, 74, 0.38);
+  --bg: #130b12;
+  --panel: rgba(19, 11, 18, 0.55);
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.garden-root {
+  position: absolute;
+  inset: 0;
+}
+
+/* Klavyesiz, imleçsiz çalışma: fare durunca imleç de kayboluyor */
+.garden-root[data-chrome="off"] {
+  cursor: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+}
+
+#vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(0, 0, 0, 0) 44%,
+    rgba(10, 4, 9, 0.62) 100%
+  );
+}
+
+.garden-root canvas {
+  display: block;
+}
+
+/* --- sayaç (demo'daki tipografi birebir) --------------------------------- */
+.garden-counter {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  padding: 22px 30px;
+  text-align: right;
+  pointer-events: none;
+}
+
+.garden-counter b {
+  display: block;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.garden-counter span {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* --- operatör çubuğu: fare oynamazsa kaybolur ---------------------------- */
+.garden-chrome {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 14px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+  transition: opacity 0.4s;
+}
+
+.garden-root[data-chrome="off"] .garden-chrome {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.garden-chrome button {
+  padding: 11px 16px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font: 500 13px/1 "Inter", sans-serif;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s;
+}
+
+.garden-chrome button:hover {
+  border-color: var(--gold);
+  background: rgba(216, 162, 74, 0.08);
+}
+
+.garden-chrome button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* --- sahne motoru yüklenemedi: siyah ekran yerine okunur mesaj ----------- */
+.garden-error {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.garden-error p {
+  font-family: Georgia, serif;
+  font-size: 30px;
+  font-style: italic;
+  color: var(--gold);
+}
+
+.garden-error span {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+}
