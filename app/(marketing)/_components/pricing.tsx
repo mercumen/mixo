@@ -1,5 +1,4 @@
 import { featureIcons, PlanGlyphIcon, type FeatureIconName } from "./icons";
-import Image from "next/image";
 import { ButtonLink, Container, Pill } from "./ui";
 
 type Plan = {
@@ -96,6 +95,8 @@ function PlanCard({ plan }: { plan: Plan }) {
         />
       ) : null}
 
+      <PlanDecorX featured={plan.featured} />
+
       {plan.featured ? (
         <span className="absolute top-6 right-6 z-10 rounded-full border border-line-strong bg-ink/70 px-3.5 py-1.5 text-[12px] font-medium backdrop-blur-sm">
           En popüler
@@ -113,16 +114,6 @@ function PlanCard({ plan }: { plan: Plan }) {
         >
           <PlanGlyphIcon className="size-7" />
         </span>
-        {/* Dekoratif metalik doku — kartın sağ üst köşesindeki soğuk vurgu.
-            `aria-hidden` değil ama alt boş: anlam taşımıyor, süs. */}
-        <Image
-          src="/gorseller/doku-metalik.webp"
-          alt=""
-          width={720}
-          height={405}
-          sizes="144px"
-          className="h-20 w-36 shrink-0 rounded-[14px] object-cover opacity-70"
-        />
       </div>
 
       <h3 className="relative mt-7 text-[19px] font-semibold tracking-tight">
@@ -203,5 +194,58 @@ export function Pricing() {
         </div>
       </Container>
     </section>
+  );
+}
+
+/**
+ * Kartın sağ üstünden taşan 3B "X" motifi — MIXO'nun amblemindeki X.
+ *
+ * TASARIMDAKİ HÂLİ: iki kalın çapraz bar, kart kenarından dışarı taşıyor ve
+ * kartın `overflow-hidden`'ı onu kesiyor; arkasında ikinci, daha küçük bir X
+ * var. Yüzeylerde hafif açık/koyu ayrımı 3B hissi veriyor.
+ *
+ * NEDEN GÖRSEL DEĞİL, SVG:
+ * Bu geometrik bir süs — raster koymak hem boşuna byte hem her kart için ayrı
+ * dosya demekti. SVG sıfır ağırlıkta, ölçekte kırılmıyor ve rengi kartın
+ * paletinden (`currentColor` yerine doğrudan violet token'ı) alıyor, yani
+ * öne çıkan kartta daha parlak, diğerlerinde daha sessiz durabiliyor.
+ *
+ * `aria-hidden`: hiçbir bilgi taşımıyor, ekran okuyucuya okutmuyoruz.
+ */
+function PlanDecorX({ featured }: { featured?: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 250 185"
+      className={`pointer-events-none absolute -top-10 -right-10 h-[185px] w-[250px] ${
+        featured ? "opacity-100" : "opacity-55"
+      }`}
+    >
+      <defs>
+        {/* Barların iki yüzü: aydınlık taraf ve gölge tarafı */}
+        <linearGradient id={`x-ay-${featured ? "f" : "n"}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--color-violet)" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="var(--color-violet)" stopOpacity="0.18" />
+        </linearGradient>
+        <linearGradient id={`x-golge-${featured ? "f" : "n"}`} x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-violet-deep)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--color-violet-deep)" stopOpacity="0.12" />
+        </linearGradient>
+      </defs>
+
+      {/* Arkadaki küçük X — derinlik hissi için hafif ve kaydırılmış */}
+      <g transform="translate(158 14) rotate(45)" opacity="0.55">
+        <rect x="-6" y="-26" width="12" height="52" rx="3" fill={`url(#x-golge-${featured ? "f" : "n"})`} />
+        <rect x="-26" y="-6" width="52" height="12" rx="3" fill={`url(#x-golge-${featured ? "f" : "n"})`} />
+      </g>
+
+      {/* Öndeki büyük X — kenardan taşıyor, kart onu kesiyor */}
+      <g transform="translate(126 60) rotate(-42)">
+        <rect x="-13" y="-70" width="26" height="140" rx="6" fill={`url(#x-golge-${featured ? "f" : "n"})`} />
+        <rect x="-70" y="-13" width="140" height="26" rx="6" fill={`url(#x-ay-${featured ? "f" : "n"})`} />
+        {/* Kesişimdeki üst yüz parlaklığı — barların üst üste bindiği yer */}
+        <rect x="-13" y="-13" width="26" height="26" rx="6" fill="var(--color-violet)" opacity="0.28" />
+      </g>
+    </svg>
   );
 }
