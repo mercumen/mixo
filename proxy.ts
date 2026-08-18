@@ -36,7 +36,17 @@ export function proxy(request: NextRequest) {
    * ve parola doğrulama ucu hariç her yol çerez ister. Kaldırma talimatı
    * lib/gate.ts başında.
    */
-  if (pathname !== "/kilit" && pathname !== "/api/gate") {
+  /**
+   * `/api/cron/*` kilidin DIŞINDA: Vercel Cron kendi çağrısını yaparken
+   * kilit çerezi taşımıyor, kilit açıkken zamanlanmış işler sessizce
+   * 401 alıp hiç çalışmazdı. O uçlar kendi `CRON_SECRET`'ıyla korunuyor.
+   */
+  const gateExempt =
+    pathname === "/kilit" ||
+    pathname === "/api/gate" ||
+    pathname.startsWith("/api/cron/");
+
+  if (!gateExempt) {
     const expected = gateToken();
     const unlocked =
       expected !== null &&

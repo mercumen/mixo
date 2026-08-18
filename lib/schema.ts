@@ -154,6 +154,15 @@ export type SessionDoc = {
   consentAt: string;
   /** Bir fotoğrafı reddedildiyse kalan hakları manuel onaya düşer */
   manualReviewOnly: boolean;
+  /**
+   * Reddedilen fotoğraf için geri verilen hak sayısı.
+   *
+   * Red hakkı iade ediyor (misafirin suçu olmayabilir) ama SINIRLI:
+   * iade sonsuz olsa kötü kare gönderip hakkını geri alan biri sınırsız
+   * deneme yapardı — her deneme bize moderasyon maliyeti yazar.
+   * Sınır `MAX_REFUNDS` (bkz. upload-complete).
+   */
+  refunds: number;
   createdAt: string;
 };
 
@@ -176,6 +185,8 @@ export type PhotoDoc = {
   r2Key: string;
   status: PhotoStatus;
   bytes?: number;
+  /** AI reddettiyse gerekçesi — organizatör panelde neden reddedildiğini görüyor */
+  rejectionReason?: string;
   createdAt: string;
 };
 

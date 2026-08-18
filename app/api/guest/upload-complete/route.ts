@@ -2,7 +2,14 @@ import { after } from "next/server";
 import { getDb } from "@/lib/firebase/admin";
 import { addToFeed } from "@/lib/feed";
 import { findEventByCode } from "@/lib/guest-session";
-import { applyCacheControl, getPhotoObjectInfo, photoKey } from "@/lib/r2";
+import { moderatePhoto } from "@/lib/moderation";
+import { planHasAiModeration } from "@/lib/plans";
+import {
+  applyCacheControl,
+  deletePhotoObject,
+  getPhotoObjectInfo,
+  photoKey,
+} from "@/lib/r2";
 import {
   paths,
   type EventDoc,
@@ -137,11 +144,19 @@ export async function POST(request: Request) {
   return Response.json({ ok: true, status: "pending" });
 }
 
+/** Reddedilen fotoğraf için oturum başına en fazla bu kadar hak iade edilir. */
+const MAX_REFUNDS = 2;
+
 /**
- * Otomatik mod açıksa ve misafir strike yemediyse doğrudan feed'e alır.
+ * Otomatik moderasyon.
  *
- * Manuel modda hiçbir şey yapmıyor — fotoğraf `pending` kalıyor ve
- * organizatörün onay kuyruğuna düşüyor.
+ * PAKET KAPISI: yapay zeka denetimi Professional ve üstünde. Essential'da
+ * `moderationMode` "otomatik" olsa bile ELLE onaya düşüyor — aksi hâlde
+ * "otomatik" kör onay anlamına gelirdi (bu bir süre böyleydi, kapatıldı).
+ *
+ * KARAR İKİLİ: model ya onaylıyor ya reddediyor, belirsiz bant yok.
+ * Teknik ARIZA bunun dışında: çağrı patlarsa fotoğraf ONAYLANMIYOR,
+ * `manual_review`'a düşüp organizatöre görünüyor.
  */
 async function autoApproveIfAllowed(
   event: EventDoc,
@@ -149,6 +164,7 @@ async function autoApproveIfAllowed(
   sessionId: string,
 ) {
   if (event.moderationMode !== "otomatik") return;
+  if (!planHasAiModeration(event.planId)) return;
 
   const db = getDb();
   const sessionSnap = await db.doc(paths.session(event.id, sessionId)).get();
@@ -157,20 +173,80 @@ async function autoApproveIfAllowed(
   // Strike: bir fotoğrafı reddedilen misafirin kalanları manuel onaya düşüyor
   if (!session || session.manualReviewOnly) return;
 
-  const photoSnap = await db.doc(paths.photo(event.id, photoId)).get();
+  const photoRef = db.doc(paths.photo(event.id, photoId));
+  const photoSnap = await photoRef.get();
   const photo = photoSnap.data() as PhotoDoc | undefined;
   if (!photo || photo.status !== "pending") return;
+
+  let verdict;
+  try {
+    verdict = await moderatePhoto(event.id, photoId);
+  } catch (error) {
+    // Arıza onay demek DEĞİL — insana bırakıyoruz
+    console.error("moderasyon yapılamadı:", photoId, error);
+    await photoRef.update({ status: "manual_review" }).catch(() => {});
+    return;
+  }
+
+  if (!verdict.uygun) {
+    await rejectByAi(event.id, photoId, sessionId, verdict.sebep);
+    return;
+  }
 
   const missionSnap = await db
     .doc(`${paths.missions(event.id)}/${photo.missionId}`)
     .get();
   const mission = missionSnap.data() as MissionDoc | undefined;
 
-  await db.doc(paths.photo(event.id, photoId)).update({ status: "approved" });
+  await photoRef.update({ status: "approved" });
   await addToFeed({
     eventId: event.id,
     photo: { ...photo, status: "approved" },
     guestName: session.displayName,
     missionLabel: mission?.label ?? "",
   });
+}
+
+/**
+ * AI reddi: kaydı işaretler, hakkı (sınırlı biçimde) geri verir, strike koyar
+ * ve fotoğrafı R2'den siler.
+ *
+ * Hak iadesi transaction içinde: misafir aynı anda başka kare gönderiyorsa
+ * sayaç bozulmasın.
+ */
+async function rejectByAi(
+  eventId: string,
+  photoId: string,
+  sessionId: string,
+  sebep: string,
+) {
+  const db = getDb();
+  const photoRef = db.doc(paths.photo(eventId, photoId));
+  const sessionRef = db.doc(paths.session(eventId, sessionId));
+
+  await photoRef.update({ status: "rejected", rejectionReason: sebep });
+
+  await db
+    .runTransaction(async (tx) => {
+      const snap = await tx.get(sessionRef);
+      if (!snap.exists) return;
+      const session = snap.data() as SessionDoc;
+      const used = session.refunds ?? 0;
+
+      const patch: Record<string, unknown> = {
+        // Strike: kalan kareleri artık otomatik onaydan geçmiyor
+        manualReviewOnly: true,
+      };
+
+      if (used < MAX_REFUNDS) {
+        patch.remainingCredits = session.remainingCredits + 1;
+        patch.refunds = used + 1;
+      }
+
+      tx.update(sessionRef, patch);
+    })
+    .catch((error) => console.error("hak iadesi yapılamadı:", photoId, error));
+
+  // KVKK: reddedilen kare saklanmıyor
+  await deletePhotoObject(eventId, photoId).catch(() => {});
 }

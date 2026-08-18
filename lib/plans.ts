@@ -101,6 +101,20 @@ export function planHasAiMissions(planId: string | null): boolean {
   return planId === "professional" || planId === "enterprise";
 }
 
+/**
+ * Yapay zeka görsel moderasyonu hangi paketlerde açık?
+ *
+ * Essential'da her fotoğraf organizatörün onay kuyruğundan geçiyor.
+ * Üst paketlerde model karar veriyor (ikili: onay/red).
+ *
+ * DİKKAT: bu kapı olmadan `moderationMode: "otomatik"` Essential'da
+ * "kör onay" anlamına geliyordu — fotoğraf hiçbir kontrolden geçmeden
+ * ekrana düşüyordu. Kapı bunun için var.
+ */
+export function planHasAiModeration(planId: string | null): boolean {
+  return planId === "professional" || planId === "enterprise";
+}
+
 export function isPlanId(value: unknown): value is PlanId {
   return typeof value === "string" && plans.some((p) => p.id === value);
 }

@@ -21,7 +21,12 @@ import {
 import { BottomNav, Logo, PolaroidScatter, CtaButton } from "./chrome";
 import { FeedScreen } from "./feed";
 import { NameScreen, SplashScreen, WelcomeScreen } from "./intro";
-import { MissionScreen, RevealScreen, type MissionCardState } from "./missions";
+import {
+  ConfirmScreen,
+  MissionScreen,
+  RevealScreen,
+  type MissionCardState,
+} from "./missions";
 
 /**
  * Misafir uygulamasının durum makinesi.
@@ -103,6 +108,15 @@ export function GuestApp({
   const [missions, setMissions] = useState<Mission[]>([]);
   const [progress, setProgress] = useState<GuestProgress | null>(null);
   const [busy, setBusy] = useState(false);
+  /**
+   * Çekilmiş ama HENÜZ GÖNDERİLMEMİŞ kare — önizleme ekranını besliyor.
+   * Cihazda tutuluyor, sunucuya hiçbir şey söylenmiyor; misafir vazgeçerse
+   * hiç var olmamış gibi kayboluyor.
+   */
+  const [pending, setPending] = useState<{
+    missionId: string;
+    compressed: Awaited<ReturnType<typeof compressPhoto>>;
+  } | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [missionError, setMissionError] = useState<string | null>(null);
 
@@ -199,7 +213,32 @@ export function GuestApp({
     setBusy(true);
     setMissionError(null);
     try {
+      /**
+       * Sadece SIKIŞTIR ve göster — yükleme yok.
+       *
+       * Misafir çektiği kareyi görmeden gönderiyordu; artık önizleme
+       * ekranından geçiyor. Kredi rezervasyonu "Gönder"e basılınca açılıyor,
+       * yani beğenilmeyen kare hiçbir sayaca dokunmuyor.
+       */
       const compressed = await compressPhoto(file);
+      setPending({ missionId, compressed });
+    } catch (error) {
+      setMissionError(
+        error instanceof Error ? error.message : "Bir şeyler ters gitti.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Önizlemeden onaylanan kare: rezervasyon aç, R2'ye yükle, tamamla. */
+  async function handleSend() {
+    if (!guest || !progress || !pending) return;
+    const { missionId, compressed } = pending;
+
+    setBusy(true);
+    setMissionError(null);
+    try {
       const { photoId, uploadUrl } = await requestUploadIntent(
         code,
         guest.token,
@@ -218,6 +257,7 @@ export function GuestApp({
           ...guest,
           remainingCredits: Math.max(0, guest.remainingCredits - 1),
         });
+        setPending(null);
       } catch {
         /**
          * PUT ya da tamamlama düştü — HAK YANMADI (kredi ancak obje R2'ye
@@ -234,6 +274,9 @@ export function GuestApp({
         setMissionError(
           "Fotoğraf gönderilemedi. İnternetini kontrol edip tekrar dene — hakkın yanmadı.",
         );
+        // Önizlemeyi kapatıyoruz: kayıt cihazda duruyor, görev ekranındaki
+        // "Tekrar denemek için dokun" satırı devralıyor.
+        setPending(null);
       }
     } catch (error) {
       setMissionError(
@@ -360,6 +403,22 @@ export function GuestApp({
       );
 
     case "gorevler":
+      // Çekilmiş ama gönderilmemiş kare varsa görev ekranı yerine onay ekranı
+      if (pending) {
+        const state = missionCardState();
+        return (
+          <ConfirmScreen
+            previewUrl={pending.compressed.dataUrl}
+            missionLabel={state.kind === "gorev" ? state.missionLabel : ""}
+            busy={busy}
+            onSend={handleSend}
+            onRetake={() => {
+              setPending(null);
+              setMissionError(null);
+            }}
+          />
+        );
+      }
       return (
         <>
           <MissionScreen

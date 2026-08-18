@@ -144,6 +144,7 @@ export async function createSession(input: {
     openIntents: 0,
     consentAt: now,
     manualReviewOnly: false,
+    refunds: 0,
     createdAt: now,
   };
 

@@ -263,3 +263,80 @@ export function MissionScreen({
     </div>
   );
 }
+
+/**
+ * ÇEKİM ONAY EKRANI.
+ *
+ * Tasarımda yoktu, sonradan eklendi: eskiden shutter'a basılan an fotoğraf
+ * doğrudan yükleniyordu — misafir kapağı kapatan başparmağını ya da bulanık
+ * kareyi göremiyordu. Üç şeyi birden çözüyor: misafir kötü kareyi kendi eler,
+ * moderasyon yükü düşer, hak boşa gitmez.
+ *
+ * Kredi bu ekranda HARCANMIYOR. Rezervasyon ancak "Gönder"e basılınca
+ * açılıyor; "Yeniden Çek" hiçbir sayaca dokunmuyor.
+ *
+ * Görsel dil mevcut ekranlardan alındı (aynı kart, aynı CtaButton) —
+ * gönderdiğin tasarımda bu ekran olmadığı için uydurma bir stil açmadım.
+ */
+export function ConfirmScreen({
+  previewUrl,
+  missionLabel,
+  busy,
+  onSend,
+  onRetake,
+}: {
+  previewUrl: string;
+  missionLabel: string;
+  busy: boolean;
+  onSend: () => void;
+  onRetake: () => void;
+}) {
+  return (
+    <div className="relative flex min-h-dvh flex-col overflow-hidden pb-28">
+      <PolaroidScatter />
+      <header className="relative pt-12">
+        <Logo />
+      </header>
+
+      <div className="relative flex flex-1 items-center px-5">
+        <div className="w-full rounded-[32px] bg-gradient-to-br from-violet-100/90 via-white to-white p-7 shadow-[0_18px_60px_rgba(40,20,90,0.14)]">
+          <p className="text-center text-[15px] font-semibold text-gray-700">
+            Bu kareyi gönderelim mi?
+          </p>
+          <h2 className="mt-1 text-center text-lg font-extrabold leading-snug text-gray-900">
+            {missionLabel}
+          </h2>
+
+          {/* Polaroid çerçeve: gönderilen karenin ekranda nasıl görüneceğine yakın */}
+          <div className="mt-5 rounded-2xl bg-white p-2.5 shadow-[0_10px_30px_rgba(40,20,90,0.12)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- data URL önizleme */}
+            <img
+              src={previewUrl}
+              alt="Çektiğin fotoğrafın önizlemesi"
+              className="max-h-[46vh] w-full rounded-xl object-contain"
+            />
+          </div>
+
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Gönderdikten sonra geri alınamaz — beğenmediysen yeniden çekebilirsin.
+          </p>
+
+          <div className="mt-6 space-y-3">
+            <CtaButton disabled={busy} onClick={onSend}>
+              {busy ? "Gönderiliyor…" : "Gönder"}
+            </CtaButton>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onRetake}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3.5 text-[15px] font-semibold text-gray-700 disabled:opacity-50"
+            >
+              <RotateCw className="h-4 w-4" />
+              Yeniden Çek
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
