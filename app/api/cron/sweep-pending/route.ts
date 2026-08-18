@@ -19,6 +19,20 @@ import { paths, type EventDoc, type PhotoDoc } from "@/lib/schema";
  * kullanımı anlamsız (kimseye veri sızdırmıyor).
  */
 
+/**
+ * ⚠️ ÇALIŞMA SIKLIĞI ŞU AN GÜNLÜK, 5 DAKİKA DEĞİL.
+ *
+ * Hobby planı sadece günlük cron'a izin veriyor — beş dakikalık ifadeyle
+ * deploy "Hobby accounts are limited to daily cron jobs" hatasıyla
+ * reddediliyor. Pro'ya geçilince `vercel.json` beş dakikaya çekilecek
+ * (ifade: yıldız bölü beş, ardından dört yıldız); CLAUDE.md'nin
+ * 60 saniye kuralı ancak o zaman gerçekten karşılanıyor.
+ *
+ * Bu arada kayıp yok: organizatörün onay kuyruğu `pending` kareleri de
+ * listeliyor, yani takılan fotoğraf görünmez olmuyor — sadece "bakılmalı"
+ * diye işaretlenmesi gecikiyor.
+ */
+
 /** Bu süreden uzun `pending` kalan kare insan kuyruğuna düşüyor. */
 const STUCK_AFTER_MS = 60_000;
 
