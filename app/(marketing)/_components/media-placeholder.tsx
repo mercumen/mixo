@@ -8,6 +8,7 @@
  * Kasten göze çarpıyor: kesikli kenarlık + etiket. Boş kutu sanılmasın.
  */
 
+import Image from "next/image";
 import type { ComponentProps } from "react";
 
 type MediaPlaceholderProps = ComponentProps<"div"> & {
@@ -51,11 +52,14 @@ export function MediaPlaceholder({
  */
 type PolaroidProps = ComponentProps<"div"> & {
   label: string;
+  /** Gerçek görsel geldiyse yolu; yoksa yer tutucu çiziliyor. */
+  src?: string;
   className?: string;
 };
 
 export function PolaroidPlaceholder({
   label,
+  src,
   className = "",
   ...props
 }: PolaroidProps) {
@@ -64,10 +68,28 @@ export function PolaroidPlaceholder({
       className={`rounded-[6px] bg-white p-[6px] pb-4 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.75)] ${className}`}
       {...props}
     >
-      <MediaPlaceholder
-        label={label}
-        className="size-full min-h-14 rounded-[3px] border-black/15 bg-black/6"
-      />
+      {src ? (
+        /**
+         * Polaroid süsleri DEKORATİF: kapsayıcıları `aria-hidden`, o yüzden
+         * alt metni boş. Ekran okuyucuya anlatacak bir şey yok.
+         *
+         * `sizes` küçük: bunlar 52-135px arası minik kareler, tarayıcının
+         * gereksiz büyük varyant indirmesinin anlamı yok.
+         */
+        <Image
+          src={src}
+          alt=""
+          width={560}
+          height={560}
+          sizes="200px"
+          className="size-full rounded-[3px] object-cover"
+        />
+      ) : (
+        <MediaPlaceholder
+          label={label}
+          className="size-full min-h-14 rounded-[3px] border-black/15 bg-black/6"
+        />
+      )}
     </div>
   );
 }

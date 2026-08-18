@@ -38,6 +38,26 @@ otomatik onay → feed → beğeni → silme). Bilinçli kararlar:
 
 ## 1. Ertelenen işler (v1'de yok, sırası gelince)
 
+### Kaybolan fotoğraf ağı ZAYIF (cron günlük) — 18 Ağustos
+Moderasyon `after()` içinde, yani misafire cevap gittikten SONRA çalışıyor.
+O arka plan işi ölürse (fonksiyon zaman aşımı, model yanıt vermemesi, tam o
+anda deploy, **Gateway hız sınırı** — en olası sebep bu) fotoğraf `pending`
+durumunda asılı kalıyor: kimse denetlemiyor, ekrana düşmüyor, misafir
+gönderdiğini sanıyor. Sessiz kayıp.
+
+`/api/cron/sweep-pending` bunu yakalıyor: 60 saniyeden uzun `pending` kalan
+kareyi `manual_review`'a çekip organizatörün önüne koyuyor.
+
+**Sorun:** Hobby planı sadece GÜNLÜK cron'a izin veriyor (5 dakikalık ifadeyle
+deploy reddediliyor). Yani ağ şu an ertesi güne kadar dokunmuyor.
+
+**Yapılacak (Pro'ya geçişle birlikte):** `vercel.json`'daki schedule beş
+dakikaya çekilecek. O zamana kadar kayıp yok ama gecikme var — organizatörün
+onay kuyruğu `pending` kareleri de listeliyor, cron sadece etiketliyor.
+
+**Ayrıca düşünülecek:** Gateway'e kredi yüklenirse hız sınırı kalkar ve bu
+arızanın en olası sebebi ortadan kaybolur.
+
 ### LANSMANDA SİTE KİLİDİNİ KALDIR — 15 Ağustos
 Proje gizli olduğu için tüm site tek parolalık kilit arkasında (`/kilit`).
 Kaldırmak için: `lib/gate.ts` + `app/kilit/` + `app/api/gate/` sil,

@@ -1,5 +1,5 @@
 import { featureIcons, PlanGlyphIcon, type FeatureIconName } from "./icons";
-import { MediaPlaceholder } from "./media-placeholder";
+import Image from "next/image";
 import { ButtonLink, Container, Pill } from "./ui";
 
 type Plan = {
@@ -113,9 +113,15 @@ function PlanCard({ plan }: { plan: Plan }) {
         >
           <PlanGlyphIcon className="size-7" />
         </span>
-        <MediaPlaceholder
-          label="3D dekor"
-          className="h-20 w-36 shrink-0 opacity-70"
+        {/* Dekoratif metalik doku — kartın sağ üst köşesindeki soğuk vurgu.
+            `aria-hidden` değil ama alt boş: anlam taşımıyor, süs. */}
+        <Image
+          src="/gorseller/doku-metalik.webp"
+          alt=""
+          width={720}
+          height={405}
+          sizes="144px"
+          className="h-20 w-36 shrink-0 rounded-[14px] object-cover opacity-70"
         />
       </div>
 

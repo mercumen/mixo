@@ -1,5 +1,6 @@
 import { ArrowUpRightIcon, PlusIcon } from "./icons";
-import { MediaPlaceholder, PolaroidPlaceholder } from "./media-placeholder";
+import Image from "next/image";
+import { PolaroidPlaceholder } from "./media-placeholder";
 import { ButtonLink, Container } from "./ui";
 
 export function Viral() {
@@ -21,11 +22,13 @@ export function Viral() {
 
           <PolaroidPlaceholder
             label="Çift"
+            src="/gorseller/kare-cift.webp"
             aria-hidden="true"
             className="absolute -top-8 right-0 hidden w-[110px] rotate-[7deg] xl:block"
           />
           <PolaroidPlaceholder
             label="Foto"
+            src="/gorseller/kare-masa.webp"
             aria-hidden="true"
             className="absolute top-[105px] left-0 hidden w-[46px] -rotate-[9deg] xl:block"
           />
@@ -34,9 +37,13 @@ export function Viral() {
         <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-5">
           {/* 1 — QR ile katılım */}
           <div className="flex flex-col">
-            <MediaPlaceholder
-              label="Masadaki QR kodu okutan telefon"
-              className="h-[300px] w-full lg:h-[365px]"
+            <Image
+              src="/gorseller/qr-okutan-telefon.webp"
+              alt="Masadaki QR kodu okutan telefon"
+              width={1200}
+              height={655}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="h-[300px] w-full rounded-[14px] object-cover lg:h-[365px]"
             />
             <div className="mt-6 flex items-start gap-4">
               <PlusIcon className="mt-0.5 size-6 text-fg/45" />
@@ -91,9 +98,13 @@ export function Viral() {
 
           {/* 3 — Sahne görseli + kapanış CTA */}
           <div className="flex flex-col">
-            <MediaPlaceholder
-              label="Dev ekranda canlı mozaik"
-              className="h-[300px] w-full lg:h-[365px]"
+            <Image
+              src="/gorseller/dev-ekran-mozaik.webp"
+              alt="Dev ekranda canlı mozaik"
+              width={1200}
+              height={655}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="h-[300px] w-full rounded-[14px] object-cover lg:h-[365px]"
             />
             <div className="mt-6 flex lg:justify-end">
               <ButtonLink href="/etkinlik-olustur" variant="dark" size="md">

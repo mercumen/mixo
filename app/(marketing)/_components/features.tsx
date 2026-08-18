@@ -1,5 +1,6 @@
 import { ArrowRightIcon, PlusIcon } from "./icons";
-import { MediaPlaceholder, PolaroidPlaceholder } from "./media-placeholder";
+import Image from "next/image";
+import { PolaroidPlaceholder } from "./media-placeholder";
 import { ButtonLink, Container } from "./ui";
 
 /**
@@ -12,6 +13,7 @@ const features = [
     title: "Gecenizin Kimliğini Yansıtın",
     body: "Sistemi tamamen kendi konseptinize göre tasarlayın. Düğün, lansman veya partinize özel renkler, logolar ve karşılama ekranları oluşturarak benzersiz bir atmosfer yaratın.",
     media: "Tablet / karşılama ekranı",
+    src: "/gorseller/karsilama-ekrani.webp",
     lift: "lg:mt-0",
   },
   {
@@ -19,6 +21,7 @@ const features = [
     title: "Kontrol Daima Sizde",
     body: "Dev ekrana yansıyacak tüm fotoğrafları akıllı yapay zeka filtreleriyle güvende tutun veya tek tıkla kendi cep telefonunuzdan onaylayarak sahneye gönderin.",
     media: "Telefonda moderasyon",
+    src: "/gorseller/telefonda-moderasyon.webp",
     lift: "lg:mt-40",
   },
   {
@@ -26,6 +29,7 @@ const features = [
     title: "Geleceğin Eğlence Anlayışı",
     body: "Sıradan fotoğraf kabinlerini (photobooth) unutun. Masalardan ana sahneye uzanan dijital ve interaktif bir köprü kurarak misafirlerinizi gecenin yıldızı yapın.",
     media: "Misafirler / kutlama",
+    src: "/gorseller/misafirler-kutlama.webp",
     lift: "lg:mt-20",
   },
   {
@@ -33,6 +37,7 @@ const features = [
     title: "Anılar Sonsuza Dek Sizinle",
     body: "Etkinlik sonrasında çekilen yüzlerce fotoğraf, yüksek çözünürlüklü dev bir galeri olarak size teslim edilir. Gecenin en güzel anlarını tek tıkla indirin ve saklayın.",
     media: "Galeri / baskılar",
+    src: "/gorseller/galeri-baskilar.webp",
     lift: "lg:mt-36",
   },
 ] as const;
@@ -63,6 +68,7 @@ export function Features() {
           <div className="relative lg:pt-24">
             <PolaroidPlaceholder
               label="Sahne"
+              src="/gorseller/kare-festival.webp"
               aria-hidden="true"
               className="absolute -top-6 left-12 hidden w-[76px] rotate-[8deg] lg:block"
             />
@@ -79,13 +85,20 @@ export function Features() {
 
         {/* Zikzak kart dizilimi */}
         <ul className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-4 lg:grid-cols-4 lg:items-start lg:gap-5">
-          {features.map(({ tag, title, body, media, lift }) => (
+          {features.map(({ tag, title, body, media, src, lift }) => (
             <li
               key={title}
               className={`flex flex-col overflow-hidden rounded-panel border border-line bg-surface p-3 ${lift}`}
             >
               <div className="relative">
-                <MediaPlaceholder label={media} className="h-56 w-full" />
+                <Image
+                  src={src}
+                  alt={media}
+                  width={900}
+                  height={491}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="h-56 w-full rounded-[14px] object-cover"
+                />
                 <span className="absolute top-3 left-3 rounded-full bg-white/85 px-3 py-1 text-[11px] font-medium text-ink">
                   {tag}
                 </span>

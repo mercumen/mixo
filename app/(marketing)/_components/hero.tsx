@@ -51,18 +51,22 @@ export function Hero() {
             metnin üstüne binmesinler. */}
         <PolaroidPlaceholder
           label="Kalabalık / sahne"
+          src="/gorseller/kare-kurumsal.webp"
           className="absolute top-[150px] right-[36%] w-[105px] rotate-[9deg]"
         />
         <PolaroidPlaceholder
           label="Kalabalık"
+          src="/gorseller/kare-festival.webp"
           className="absolute top-[210px] right-[-30px] w-[135px] -rotate-[7deg]"
         />
         <PolaroidPlaceholder
           label="Misafirler"
+          src="/gorseller/kare-masa.webp"
           className="absolute top-[610px] right-[110px] w-[52px] rotate-[12deg] opacity-70"
         />
         <PolaroidPlaceholder
           label="Dans"
+          src="/gorseller/kare-cift.webp"
           className="absolute top-[715px] right-[57%] w-[72px] -rotate-[11deg]"
         />
       </div>
@@ -93,14 +97,17 @@ export function Hero() {
             <div aria-hidden="true" className="flex items-center">
               <PolaroidPlaceholder
                 label="Foto"
+                src="/gorseller/kare-masa.webp"
                 className="w-[46px] -rotate-[10deg]"
               />
               <PolaroidPlaceholder
                 label="Foto"
+                src="/gorseller/kare-cift.webp"
                 className="-ml-4 w-[46px] rotate-[3deg]"
               />
               <PolaroidPlaceholder
                 label="Foto"
+                src="/gorseller/kare-festival.webp"
                 className="-ml-4 w-[46px] rotate-[13deg]"
               />
             </div>
