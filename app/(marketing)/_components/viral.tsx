@@ -55,24 +55,35 @@ export function Viral() {
           </div>
 
           {/* 2 — Dokulu marka kartı.
-              Arka plan dokusu MediaPlaceholder değil: tam kaplayan bir kutunun
-              ortalanmış etiketi kart metniyle çakışıyordu. Doku burada düz bir
-              katman, "hangi görsel gelecek" bilgisi sağ alta iğnelendi. */}
+              Arka plan artık kartı tam kaplayan, sessiz dönen metalik doku
+              videosu. Üstüne koyu bir perde çekiliyor: doku hareketli ve
+              parlak, metin okunurluğu perdeye bağlı.
+
+              `autoPlay muted loop playsInline` dördü BİRLİKTE şart — iOS
+              sessiz olmayan videoyu satır içi oynatmıyor, `playsInline`
+              olmadan tam ekrana geçiriyor.
+
+              `preload="metadata"`: 900 KB'lık dosya sayfa açılışını
+              bekletmesin (mekan interneti mantığı burada da geçerli).
+              `poster` ilk kareyi anında gösteriyor, video sonra devralıyor. */}
           <div className="relative flex min-h-[440px] flex-col overflow-hidden rounded-[14px] border border-line bg-surface p-8 lg:min-h-[490px]">
+            <video
+              aria-hidden="true"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/gorseller/doku-poster.webp"
+              className="pointer-events-none absolute inset-0 size-full object-cover opacity-45"
+            >
+              <source src="/gorseller/doku-loop.mp4" type="video/mp4" />
+            </video>
+            {/* Okunurluk perdesi — metin dokunun parlak yerlerinde kaybolmasın */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 10px)",
-              }}
+              className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/70"
             />
-            <span
-              aria-hidden="true"
-              className="absolute right-3 bottom-3 text-[9px] tracking-wide text-fg-subtle uppercase"
-            >
-              Dokulu arka plan gelecek
-            </span>
 
             <p className="relative text-[22px] leading-none font-extrabold tracking-[0.14em]">
               MIXO
