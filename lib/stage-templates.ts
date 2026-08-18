@@ -130,6 +130,23 @@ export const stageTemplates: StageTemplate[] = [
     mode: "mozaik",
     plans: UPPER,
   },
+  /**
+   * ANI BAHÇESİ — hâlâ TEK GERÇEKLEŞTİRİLMİŞ sahne (bkz. app/display).
+   *
+   * Mozaik grubuna konuldu çünkü davranışı mozaiğe yakın: fotoğraflar tek bir
+   * bütünü (gülü) oluşturuyor ve dolduğunda çiftin ismine dönüşüyor.
+   * Referans görsel İSTEMİYOR — hedef görseli kendi geometrisi veriyor.
+   *
+   * Paket: üst gruba alındı. Sahnenin en gösterişlisi bu; asimetrik kurala
+   * göre Essential onu kilitli görüp yükseltmeyi düşünüyor.
+   */
+  {
+    id: "ani-bahcesi",
+    name: "Anı Bahçesi",
+    description: "Her fotoğraf güle bir yaprak olur",
+    mode: "mozaik",
+    plans: UPPER,
+  },
 ];
 
 export function findStageTemplate(id: string | null) {

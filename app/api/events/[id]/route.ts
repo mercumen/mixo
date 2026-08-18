@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/firebase/admin";
 import { paths, type EventDoc } from "@/lib/schema";
+import { planHasAiModeration } from "@/lib/plans";
 import { setupStepIds, type SetupStepId } from "@/lib/setup-steps";
 import {
   findStageTemplate,
@@ -195,6 +196,33 @@ export async function PATCH(
   // --- Adım 4: Paket --------------------------------------------------------
   if (typeof body.planId === "string") {
     patch.planId = body.planId;
+  }
+
+  /**
+   * Moderasyon modu.
+   *
+   * PAKET KAPISI: "otomatik" ancak yapay zeka denetimi olan pakette
+   * seçilebiliyor. Essential'da otomatiğe geçmek "kör onay" demek olurdu —
+   * fotoğraf hiçbir kontrolden geçmeden ekrana düşerdi.
+   *
+   * Bu alan bir süre HİÇBİR YERDEN değiştirilemiyordu (ne panelde düğme, ne
+   * burada alan). Sonuç: yeni etkinlikler manuel başladığı için organizatör
+   * manuel modda kilitli kalıyordu ve her kare onay kuyruğuna düşüyordu.
+   */
+  if (body.moderationMode === "manuel" || body.moderationMode === "otomatik") {
+    const planId =
+      typeof body.planId === "string" ? body.planId : existing.planId;
+
+    if (body.moderationMode === "otomatik" && !planHasAiModeration(planId)) {
+      return Response.json(
+        {
+          error:
+            "Otomatik moderasyon Professional ve üstü paketlerde. Fotoğrafları elle onaylamaya devam edebilirsiniz.",
+        },
+        { status: 403 },
+      );
+    }
+    patch.moderationMode = body.moderationMode;
   }
 
   // --- Adım tamamlama -------------------------------------------------------

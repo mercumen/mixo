@@ -4,7 +4,12 @@ import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
 import { listEventPhotos, photoStats, type DashboardPhoto } from "../_lib/data";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
-import { ReviewButtons, RemoveFromFeedButton } from "./_components/photo-actions";
+import {
+  ModerationModeSwitch,
+  ReviewButtons,
+  RemoveFromFeedButton,
+} from "./_components/photo-actions";
+import { planHasAiModeration } from "@/lib/plans";
 
 /**
  * Canlı Akış — moderasyon kuyruğu + onaylı duvar.
@@ -50,6 +55,14 @@ export default async function LiveFeedPage() {
         <StatTile label="İnceleme Bekleyen" value={stats.pending} accent />
         <StatTile label="Onaylı" value={stats.approved} />
         <StatTile label="Reddedilen" value={stats.rejected} />
+      </div>
+
+      <div className="max-w-md">
+        <ModerationModeSwitch
+          eventId={event.id}
+          mode={event.moderationMode}
+          aiAllowed={planHasAiModeration(event.planId)}
+        />
       </div>
 
       <section>
