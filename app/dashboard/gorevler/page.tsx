@@ -11,8 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { MissionDoc } from "@/lib/schema";
-import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
+import { paymentGate } from "../_lib/gate";
 import { listMissions, missionStats } from "../_lib/data";
 import { eventTypeLabel } from "../_lib/format";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
@@ -36,20 +36,18 @@ const sourceLabels: Record<MissionDoc["source"], string> = {
 export default async function TasksPage() {
   const { event } = await getDashboardContext();
 
-  // Panelin bütün sayfaları etkinlik bağlamına dayanıyor
-  if (!event) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title={"Görevler"}
-          description={"Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin."}
-        />
-        <NoEventState what={"Görev havuzunu"} />
-      </div>
-    );
-  }
+  /**
+   * ÖDEME KAPISI: etkinlik yoksa boş durum, ödenmemişse ödeme ekranı.
+   * İkisini de `paymentGate` döndürüyor; null dönerse sayfa açık.
+   */
+  const kapi = paymentGate(event, {
+    title: 'Görevler',
+    description: 'Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin.',
+    ne: 'Görev havuzunu',
+  });
+  if (kapi) return kapi;
 
-  const missions = await listMissions(event.id);
+  const missions = await listMissions(event!.id);
   const stats = missionStats(missions);
   const pendingAi = missions.filter((m) => m.pendingApproval);
 
@@ -60,10 +58,10 @@ export default async function TasksPage() {
         description="Misafirlerin göreceği tüm görevleri yönetin, AI ile yenilerini üretin."
         actions={
           <>
-            <AddMissionButton eventId={event.id} />
+            <AddMissionButton eventId={event!.id} />
             <GenerateMissionsButton
-              eventId={event.id}
-              allowed={planHasAiMissions(event.planId)}
+              eventId={event!.id}
+              allowed={planHasAiMissions(event!.planId)}
             />
           </>
         }
@@ -71,9 +69,9 @@ export default async function TasksPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
         <EngineCard
-          themeLabel={eventTypeLabel(event.typeId)}
-          subject={event.missionSubject || event.name}
-          toneId={event.missionTone}
+          themeLabel={eventTypeLabel(event!.typeId)}
+          subject={event!.missionSubject || event!.name}
+          toneId={event!.missionTone}
         />
 
         <div className="space-y-4">
@@ -87,12 +85,12 @@ export default async function TasksPage() {
           {/* Onay kuyruğu sadece bekleyen AI görevi varken görünüyor.
               Şablondan kopyalanan görevler onaylı doğuyor. */}
           {pendingAi.length > 0 ? (
-            <PendingAiCard missions={pendingAi} eventId={event.id} />
+            <PendingAiCard missions={pendingAi} eventId={event!.id} />
           ) : null}
         </div>
       </div>
 
-      <TaskTable missions={missions} eventId={event.id} />
+      <TaskTable missions={missions} eventId={event!.id} />
     </div>
   );
 }

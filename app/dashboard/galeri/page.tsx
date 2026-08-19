@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
+import { paymentGate } from "../_lib/gate";
 import { listEventPhotos, type DashboardPhoto } from "../_lib/data";
 import { formatLongDate } from "../_lib/format";
 import { InfoNote, PageHeader, StatTile } from "../_components/ui-bits";
@@ -28,21 +28,20 @@ export default async function GalleryPage({
 }) {
   const { event } = await getDashboardContext();
 
-  // Panelin bütün sayfaları etkinlik bağlamına dayanıyor
-  if (!event) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title={"Galeri"}
-          description={"Etkinliğin onaylı tüm fotoğraf arşivi"}
-        />
-        <NoEventState what={"Galeriyi"} />
-      </div>
-    );
-  }
+  /**
+   * ÖDEME KAPISI: etkinlik yoksa boş durum, ödenmemişse ödeme ekranı.
+   * İkisini de `paymentGate` döndürüyor; null dönerse sayfa açık.
+   */
+  const kapi = paymentGate(event, {
+    title: 'Galeri',
+    description: 'Etkinliğin onaylı tüm fotoğraf arşivi',
+    ne: 'Galeriyi',
+  });
+  if (kapi) return kapi;
 
   const { q = "", sirala = "yeni" } = await searchParams;
-  const photos = await listEventPhotos(event.id);
+  // kapi null döndü => event dolu
+  const photos = await listEventPhotos(event!.id);
   const approved = photos.filter((p) => p.status === "approved");
 
   const query = q.trim().toLocaleLowerCase("tr");
@@ -84,7 +83,7 @@ export default async function GalleryPage({
 
       {/* KVKK: saklama süresi ve silme penceresi kullanıcıya görünür olmalı */}
       <InfoNote icon={<Clock className="size-3.5" />}>
-        {retentionNote(event.endsAt ?? event.startsAt)}
+        {retentionNote(event!.endsAt ?? event!.startsAt)}
       </InfoNote>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

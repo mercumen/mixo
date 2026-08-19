@@ -40,7 +40,7 @@ export default async function DashboardLayout({
   const authed = await getCurrentUser();
   if (!authed) redirect("/giris");
 
-  const { user, event } = await getDashboardContext();
+  const { user, event, events } = await getDashboardContext();
 
   // Kabuk ham dokümanı değil ekrana hazır alanları alıyor: biçimlendirme
   // sunucuda kalsın, sidebar client component olduğu için oraya Intl taşımayalım.
@@ -63,7 +63,11 @@ export default async function DashboardLayout({
       defaultOpen={sidebarState !== "false"}
       className="bg-background text-foreground"
     >
-      <DashboardSidebar user={user} event={eventSummary} />
+      <DashboardSidebar
+        user={user}
+        event={eventSummary}
+        events={events.map((e) => ({ id: e.id, name: e.name, paid: e.paid }))}
+      />
       {/* SidebarInset kendisi <main> — içeride ikinci bir main açmıyoruz */}
       <SidebarInset>
         <DashboardTopbar event={eventSummary} />

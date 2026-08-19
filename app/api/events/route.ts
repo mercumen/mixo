@@ -152,6 +152,12 @@ export async function POST(request: Request) {
       missionTheme: null,
       missionFacts: [],
       planId: null,
+      /**
+       * Ödeme yapılmadı. Bu hâlde MİSAFİR GİREMEZ (QR basılabilir) ve
+       * panelin görev/akış/sahne/galeri/ekip sayfaları kilitli.
+       */
+      paid: false,
+      paidAt: null,
       // Sihirbazın 1. adımı bu isteği doğuruyor, dolayısıyla tamamlandı
       completedSteps: ["bilgiler"],
       createdAt: new Date().toISOString(),

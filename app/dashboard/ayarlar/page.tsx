@@ -1,6 +1,7 @@
 import { NoEventState } from "../_components/empty-state";
 import { PageHeader } from "../_components/ui-bits";
 import { getDashboardContext } from "../_lib/context";
+import { isEventLocked } from "@/lib/event-lock";
 import { SettingsClient } from "./_components/settings-client";
 
 /**
@@ -44,6 +45,8 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       planId={event.planId}
+      locked={isEventLocked(event)}
+      paid={event.paid}
       values={{
         name: event.name,
         type: event.typeId,

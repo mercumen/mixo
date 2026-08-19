@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronDown,
+  FolderOpen,
+  Check,
   ChevronsUpDown,
   Images,
   LayoutDashboard,
@@ -65,6 +67,7 @@ const mainNav = [
 ];
 
 const adminNav = [
+  { href: "/dashboard/organizasyonlar", label: "Organizasyonlarım", icon: FolderOpen },
   { href: "/dashboard/ekip", label: "Ekip", icon: Users },
   { href: "/dashboard/ayarlar", label: "Ayarlar & Faturalandırma", icon: Settings },
 ];
@@ -140,12 +143,29 @@ export type SidebarEvent = {
 export function DashboardSidebar({
   user,
   event,
+  events,
 }: {
   user: UserDoc;
   event: SidebarEvent | null;
+  /** Seçicideki liste — sadece ad/kimlik/ödeme durumu taşıyor */
+  events: { id: string; name: string; paid: boolean }[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  /**
+   * Aktif etkinliği değiştirir. Seçim çerezde, sahiplik sunucuda
+   * doğrulanıyor (bkz. /api/events/active).
+   */
+  async function switchTo(eventId: string) {
+    await fetch("/api/events/active", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ eventId }),
+    });
+    router.push("/dashboard");
+    router.refresh();
+  }
   const { isMobile } = useSidebar();
 
   async function handleSignOut() {
@@ -172,27 +192,63 @@ export function DashboardSidebar({
         <div className="px-2 pt-2 group-data-[collapsible=icon]:hidden">
           {event ? (
             <>
-              {/* Seçici davranışı henüz yok: kullanıcının tek etkinliği var.
-                  Çoklu etkinlik turu gelince buraya dropdown gelecek. */}
-              <button
-                type="button"
-                disabled
-                className="flex w-full items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-left"
-                aria-label="Etkinlik değiştir"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-semibold">
-                    {event.name}
-                  </span>
-                  <span className="block truncate text-[11px] text-muted-foreground">
-                    {event.typeLabel} • {event.dateLabel}
-                  </span>
-                </span>
-                <ChevronDown
-                  className="size-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </button>
+              {/* Etkinlik seçici — birden fazla etkinlik varsa aralarında geçiş.
+                  Tek etkinlik varken de açılıyor: "Tümünü gör" ve "Yeni etkinlik"
+                  bağlantıları oradan çıkıyor. */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:border-primary/40"
+                    aria-label="Etkinlik değiştir"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-semibold">
+                        {event.name}
+                      </span>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        {event.typeLabel} • {event.dateLabel}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className="size-4 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-60">
+                  <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
+                    Etkinlikler
+                  </DropdownMenuLabel>
+                  {events.map((e) => (
+                    <DropdownMenuItem
+                      key={e.id}
+                      disabled={e.id === event.id}
+                      onClick={() => void switchTo(e.id)}
+                      className="gap-2"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{e.name}</span>
+                      {e.id === event.id ? (
+                        <Check className="size-3.5 shrink-0" aria-hidden="true" />
+                      ) : !e.paid ? (
+                        <span className="shrink-0 text-[10px] text-muted-foreground">
+                          ödenmedi
+                        </span>
+                      ) : null}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/organizasyonlar">Tümünü gör</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/etkinlik-olustur">
+                      <Plus className="size-3.5" aria-hidden="true" />
+                      Yeni etkinlik
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <div className="mt-3">
                 <Progress value={event.setupProgress} className="h-1" />

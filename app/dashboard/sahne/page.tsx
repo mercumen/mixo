@@ -1,6 +1,5 @@
-import { NoEventState } from "../_components/empty-state";
-import { PageHeader } from "../_components/ui-bits";
 import { getDashboardContext } from "../_lib/context";
+import { paymentGate } from "../_lib/gate";
 import { StageClient } from "./_components/stage-client";
 
 /**
@@ -11,17 +10,14 @@ import { StageClient } from "./_components/stage-client";
 export default async function StagePage() {
   const { event } = await getDashboardContext();
 
-  if (!event) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Sahne / Önizleme"
-          description="Büyük ekrana yansıyacak canlı mozaiğin önizlemesi"
-        />
-        <NoEventState what="Sahne önizlemesini" />
-      </div>
-    );
-  }
+  // ÖDEME KAPISI — bkz. _lib/gate.tsx
+  const kapi = paymentGate(event, {
+    title: 'Sahne / Önizleme',
+    description: 'Büyük ekranda ne göründüğünü buradan seçin.',
+    ne: 'Sahneyi',
+  });
+  if (kapi) return kapi;
 
-  return <StageClient event={event} />;
+  // kapi null döndü => event dolu
+  return <StageClient event={event!} />;
 }

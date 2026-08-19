@@ -1,6 +1,11 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/firebase/admin";
 import { paths, type EventDoc } from "@/lib/schema";
+import {
+  isFieldSet,
+  LOCKED_FIELDS,
+  lockedFieldLabel,
+} from "@/lib/event-lock";
 import { planHasAiModeration } from "@/lib/plans";
 import { setupStepIds, type SetupStepId } from "@/lib/setup-steps";
 import {
@@ -242,6 +247,25 @@ export async function PATCH(
   }
 
   try {
+    /**
+     * SABİT ALAN KONTROLÜ — arayüzde gizlemek yetmez.
+     *
+     * Tarih, tür, katılımcı sayısı ve paket bir kere girilip sabitleniyor
+     * (bkz. lib/event-lock.ts). Dolu bir alanı değiştiren istek 403 alıyor;
+     * boş alanı ilk kez doldurmak serbest, sihirbaz böyle çalışıyor.
+     */
+    for (const field of LOCKED_FIELDS) {
+      if (!(field in patch)) continue;
+      if (!isFieldSet(existing, field)) continue;
+      if (patch[field] === existing[field]) continue;
+      return Response.json(
+        {
+          error: `${lockedFieldLabel(field)} sonradan değiştirilemiyor. Değişiklik gerekiyorsa bizimle iletişime geçin.`,
+        },
+        { status: 403 },
+      );
+    }
+
     await ref.update(patch);
     const updated = { ...existing, ...patch };
     return Response.json({ event: updated });

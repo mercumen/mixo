@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Info, MapPin } from "lucide-react";
+import { Check, Info, Lock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,9 +36,18 @@ export type SettingsValues = {
 export function SettingsClient({
   values,
   planId,
+  locked,
+  paid,
 }: {
   values: SettingsValues;
   planId: string | null;
+  /**
+   * Çekirdek bilgiler sabitlendi mi? (bkz. lib/event-lock.ts)
+   * Tarih, tür, katılımcı sayısı ve paket bir kere girilip donuyor —
+   * ticari taahhüt oldukları için sonradan değiştirilmiyor.
+   */
+  locked: boolean;
+  paid: boolean;
 }) {
   return (
     <div className="space-y-5">
@@ -47,6 +56,14 @@ export function SettingsClient({
         description="Etkinlik bilgilerini, planınızı ve fatura geçmişinizi yönetin"
       />
 
+      {locked ? (
+        <InfoNote icon={<Lock className="size-3.5" />}>
+          Etkinlik türü, tarihi ve katılımcı sayısı kurulumda belirlendi ve
+          değiştirilemiyor. Değişiklik gerekiyorsa bizimle iletişime geçin —
+          tema, görevler ve sahne ayarları serbestçe düzenlenebilir.
+        </InfoNote>
+      ) : null}
+
       <Tabs defaultValue="bilgiler">
         <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
           <SettingsTab value="bilgiler">Etkinlik Bilgileri</SettingsTab>
@@ -54,10 +71,10 @@ export function SettingsClient({
         </TabsList>
 
         <TabsContent value="bilgiler" className="mt-6">
-          <EventInfoTab values={values} />
+          <EventInfoTab values={values} locked={locked} />
         </TabsContent>
         <TabsContent value="plan" className="mt-6">
-          <PlansTab currentPlanId={planId} />
+          <PlansTab currentPlanId={planId} locked={locked} paid={paid} />
         </TabsContent>
       </Tabs>
     </div>
@@ -109,7 +126,14 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EventInfoTab({ values }: { values: SettingsValues }) {
+function EventInfoTab({
+  values,
+  locked,
+}: {
+  values: SettingsValues;
+  /** Sabitlenen alanlar salt-okunur (bkz. lib/event-lock.ts) */
+  locked: boolean;
+}) {
   return (
     <Card className="gap-0 p-5">
       <div>
@@ -127,7 +151,7 @@ function EventInfoTab({ values }: { values: SettingsValues }) {
               <Input id="s-name" defaultValue={values.name} />
             </Field>
             <Field label="Etkinlik Türü" htmlFor="s-type">
-              <Select defaultValue={values.type}>
+              <Select defaultValue={values.type} disabled={locked}>
                 <SelectTrigger id="s-type" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -148,13 +172,13 @@ function EventInfoTab({ values }: { values: SettingsValues }) {
           <GroupLabel>Tarih &amp; Saat</GroupLabel>
           <div className="grid gap-4 md:grid-cols-3">
             <Field label="Tarih" htmlFor="s-date">
-              <Input id="s-date" type="date" defaultValue={values.date} />
+              <Input id="s-date" type="date" defaultValue={values.date} disabled={locked} />
             </Field>
             <Field label="Başlangıç Saati" htmlFor="s-start">
-              <Input id="s-start" type="time" defaultValue={values.startTime} />
+              <Input id="s-start" type="time" defaultValue={values.startTime} disabled={locked} />
             </Field>
             <Field label="Bitiş Saati" htmlFor="s-end">
-              <Input id="s-end" type="time" defaultValue={values.endTime} />
+              <Input id="s-end" type="time" defaultValue={values.endTime} disabled={locked} />
             </Field>
           </div>
         </section>
@@ -167,6 +191,7 @@ function EventInfoTab({ values }: { values: SettingsValues }) {
               type="number"
               inputMode="numeric"
               defaultValue={values.expectedGuests}
+              disabled={locked}
             />
           </Field>
           <InfoNote icon={<Info className="size-3.5" />}>
@@ -210,7 +235,76 @@ function EventInfoTab({ values }: { values: SettingsValues }) {
   );
 }
 
-function PlansTab({ currentPlanId }: { currentPlanId: string | null }) {
+function PlansTab({
+  currentPlanId,
+  locked,
+  paid,
+}: {
+  currentPlanId: string | null;
+  locked: boolean;
+  paid: boolean;
+}) {
+  const current = plans.find((p) => p.id === currentPlanId);
+
+  /**
+   * KİLİTLİYSE PAKET KARTLARI HİÇ GÖSTERİLMİYOR.
+   *
+   * Ürün kararı: paket bir kere seçilip sabitleniyor. Kartları "devre dışı"
+   * göstermek yerine tamamen kaldırıyoruz — kilitli bir seçim listesi
+   * organizatöre "belki değiştirebilirim" hissi veriyor, sonra 403 yiyor.
+   * Yerine satın alınan paket ve durumu yazıyor.
+   */
+  if (locked && current) {
+    return (
+      <div>
+        <h2 className="text-[13.5px] font-semibold tracking-tight">Paketiniz</h2>
+        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+          Paket etkinlik kurulurken belirlendi ve değiştirilemiyor.
+        </p>
+
+        <Card className="mt-5 max-w-md gap-0 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-[14px] font-semibold tracking-tight">
+                {current.name}
+              </h3>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {current.priceLabel}
+                {current.priceSuffix ? ` ${current.priceSuffix}` : ""}
+              </p>
+            </div>
+            <Badge
+              variant="secondary"
+              className={
+                paid
+                  ? "bg-accent text-[10.5px] text-accent-foreground"
+                  : "bg-muted text-[10.5px] text-muted-foreground"
+              }
+            >
+              {paid ? "Ödendi" : "Ödeme bekliyor"}
+            </Badge>
+          </div>
+
+          <ul className="mt-4 space-y-1.5">
+            {current.features.map((f) => (
+              <li
+                key={f}
+                className="flex items-start gap-2 text-[12.5px] text-muted-foreground"
+              >
+                <Check className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-5 text-[11.5px] text-muted-foreground">
+            Paket değişikliği gerekiyorsa bizimle iletişime geçin.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div>

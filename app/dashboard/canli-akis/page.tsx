@@ -1,7 +1,7 @@
 import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
+import { paymentGate } from "../_lib/gate";
 import { listEventPhotos, photoStats, type DashboardPhoto } from "../_lib/data";
 import { PageHeader, SectionHeading, StatTile } from "../_components/ui-bits";
 import {
@@ -23,20 +23,19 @@ import { planHasAiModeration } from "@/lib/plans";
 export default async function LiveFeedPage() {
   const { event } = await getDashboardContext();
 
-  // Panelin bütün sayfaları etkinlik bağlamına dayanıyor
-  if (!event) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title={"Canlı Akış"}
-          description={"Onaylı akış, misafirlerin telefonundaki canlı duvarla aynı fotoğraf havuzunu paylaşır."}
-        />
-        <NoEventState what={"Canlı akışı"} />
-      </div>
-    );
-  }
+  /**
+   * ÖDEME KAPISI: etkinlik yoksa boş durum, ödenmemişse ödeme ekranı.
+   * İkisini de `paymentGate` döndürüyor; null dönerse sayfa açık.
+   */
+  const kapi = paymentGate(event, {
+    title: 'Canlı Akış',
+    description: 'Onaylı akış, misafirlerin telefonundaki canlı duvarla aynı fotoğraf havuzunu paylaşır.',
+    ne: 'Canlı akışı',
+  });
+  if (kapi) return kapi;
 
-  const photos = await listEventPhotos(event.id);
+  // kapi null döndü => event dolu
+  const photos = await listEventPhotos(event!.id);
   const stats = photoStats(photos);
   const queue = photos.filter(
     (p) => p.status === "pending" || p.status === "manual_review",
@@ -59,9 +58,9 @@ export default async function LiveFeedPage() {
 
       <div className="max-w-md">
         <ModerationModeSwitch
-          eventId={event.id}
-          mode={event.moderationMode}
-          aiAllowed={planHasAiModeration(event.planId)}
+          eventId={event!.id}
+          mode={event!.moderationMode}
+          aiAllowed={planHasAiModeration(event!.planId)}
         />
       </div>
 
@@ -87,7 +86,7 @@ export default async function LiveFeedPage() {
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
                     {photo.task}
                   </p>
-                  <ReviewButtons eventId={event.id} photoId={photo.id} />
+                  <ReviewButtons eventId={event!.id} photoId={photo.id} />
                 </div>
               </Card>
             ))}
@@ -113,7 +112,7 @@ export default async function LiveFeedPage() {
                 className="relative break-inside-avoid gap-0 overflow-hidden p-0"
               >
                 <RemoveFromFeedButton
-                  eventId={event.id}
+                  eventId={event!.id}
                   photoId={photo.id}
                   task={photo.task}
                 />

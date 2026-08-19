@@ -3,8 +3,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { NoEventState } from "../_components/empty-state";
 import { getDashboardContext } from "../_lib/context";
+import { paymentGate } from "../_lib/gate";
 import { PageHeader, SectionHeading } from "../_components/ui-bits";
 import { pendingInvites, teamMembers } from "../_lib/mock";
 
@@ -22,17 +22,13 @@ export default async function TeamPage() {
   const { event } = await getDashboardContext();
 
   // Panelin bütün sayfaları etkinlik bağlamına dayanıyor
-  if (!event) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title={"Ekip"}
-          description={"Etkinliği birlikte yönetin"}
-        />
-        <NoEventState what={"Ekibi"} />
-      </div>
-    );
-  }
+  // ÖDEME KAPISI — bkz. _lib/gate.tsx
+  const kapi = paymentGate(event, {
+    title: 'Ekip',
+    description: 'Etkinlik ekibinizi yönetin.',
+    ne: 'Ekip yönetimini',
+  });
+  if (kapi) return kapi;
 
   return (
     <div className="space-y-5">

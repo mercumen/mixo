@@ -67,6 +67,20 @@ export function eventWindowState(
   event: EventDoc,
   now = Date.now(),
 ): EventWindowState {
+  /**
+   * ÖDEME KAPISI — misafir tarafı.
+   *
+   * Ödenmemiş etkinlikte misafir GİREMİYOR: ürünü ödemeden kullanmanın önünü
+   * kesen asıl koruma bu, panelin kilitleri değil. QR üretimi/baskısı buna
+   * TABİ DEĞİL (ürün kararı) — organizatör masaları ödeme beklerken
+   * hazırlayabiliyor, kartlar sadece ödeme tamamlanınca çalışıyor.
+   *
+   * "hazir_degil" durumunu kullanıyoruz: misafire "Etkinlik hazırlanıyor"
+   * diyor. Ödeme bilgisini misafire sızdırmanın anlamı yok, hatta zararlı —
+   * davetlinin bileceği bir şey değil.
+   */
+  if (!event.paid) return "hazir_degil";
+
   if (!event.startsAt) return "hazir_degil";
 
   const start = new Date(event.startsAt).getTime();

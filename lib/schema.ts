@@ -92,6 +92,21 @@ export type EventDoc = {
   planId: string | null;
 
   /**
+   * Ödeme yapıldı mı?
+   *
+   * ÖDEME ENTEGRASYONU YOK (CLAUDE.md kapsam dışı, v2). Bu alan gerçek:
+   * panel ve misafir erişimi buna bakıyor. Şimdilik panelde bir düğme
+   * doğrudan `true` yapıyor — gerçek sağlayıcı geldiğinde o düğmenin
+   * yerine ödeme akışı girecek, alanın anlamı değişmeyecek.
+   *
+   * Ödenmemiş etkinlikte MİSAFİR GİREMEZ (ürünü ödemeden kullanmanın önünü
+   * kesen asıl koruma), ama QR üretimi/baskısı serbest — organizatör masaları
+   * ödeme beklerken hazırlayabilsin.
+   */
+  paid: boolean;
+  paidAt: string | null;
+
+  /**
    * Tamamlanan sihirbaz adımları. Kurulum ilerlemesi yüzdesi ve Genel
    * Bakış'taki kontrol listesi buradan besleniyor — alanlara tek tek bakıp
    * tahmin etmiyoruz.

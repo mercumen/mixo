@@ -6,6 +6,8 @@
  * (TV ekranını) temsil ediyor, panel açık temada olsa bile.
  */
 
+import Image from "next/image";
+
 const frame =
   "relative h-full w-full overflow-hidden rounded-lg bg-[#0d0b14] " +
   "bg-[radial-gradient(70%_60%_at_50%_0%,rgba(124,58,237,0.28),transparent_70%)]";
@@ -14,6 +16,28 @@ const box = "rounded-[2px] border border-white/25 bg-white/5";
 
 export function TemplateThumb({ id }: { id: string }) {
   switch (id) {
+    /**
+     * ANI BAHÇESİ — diğerleri gibi diyagram değil, SAHNENİN GERÇEK RENDER'I.
+     *
+     * Diğer şablonlar henüz kod olarak yok; onları diyagramla anlatmak
+     * doğru. Anı Bahçesi ise çalışıyor (app/display), o yüzden organizatöre
+     * şemasını değil gerçekten göreceği şeyi gösteriyoruz — görüntü
+     * ekranın kendisinden alındı.
+     */
+    case "ani-bahcesi":
+      return (
+        <div className={frame}>
+          <Image
+            src="/gorseller/sahne-ani-bahcesi.webp"
+            alt="Anı Bahçesi sahnesi: fotoğrafların yaprak olduğu cam gül"
+            width={640}
+            height={441}
+            sizes="320px"
+            className="size-full object-cover"
+          />
+        </div>
+      );
+
     case "organik-kolaj":
       return (
         <div className={frame}>
