@@ -56,7 +56,7 @@ export const plans: Plan[] = [
     features: [
       "Kişiselleştirilmiş Yapay Zekâ Görevleri",
       "Yapay Zekâ İçerik Moderasyonu",
-      "Canlı Görsel Deneyimleri",
+      "Canlı Yapay Zekâ Görsel Deneyimi",
       "Gelişmiş Etkinlik Analizi",
       "Markaya Özel Deneyim",
       "Öncelikli Destek",

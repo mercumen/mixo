@@ -10,15 +10,25 @@ export function Viral() {
         {/* Başlık — "#KusursuzAkış" etiketi ilk satırın sonuna oturuyor.
             İki span lg'de ayrı satır oluyor, altında normal akışta sarıyor. */}
         <div className="relative">
-          <h2 className="mx-auto max-w-[880px] text-center text-[clamp(2rem,4.6vw,3.6rem)] leading-[1.12] font-bold tracking-[-0.025em]">
-            <span className="lg:block">
-              Sıkıcı Bekleyişleri{" "}
-              <span className="ml-1 inline-block -rotate-[1.5deg] rounded-[3px] bg-white px-3 py-1 align-middle text-[clamp(0.8rem,1.35vw,1.1rem)] font-semibold tracking-normal text-ink">
-                #KusursuzAkış
-              </span>
-            </span>{" "}
-            <span className="lg:block">Viral Etkileşime Çevirin</span>
+          {/* Etiket başlığın İÇİNDEN çıkarıldı: yeni başlık tam bir cümle ve
+              araya hashtag sıkıştırmak cümleyi bölüyordu. Üst satırda duruyor,
+              tasarımdaki döndürülmüş beyaz rozet görünümü korundu. */}
+          <p className="flex justify-center">
+            <span className="inline-block -rotate-[1.5deg] rounded-[3px] bg-white px-3 py-1 text-[clamp(0.8rem,1.35vw,1.1rem)] font-semibold text-ink">
+              #KusursuzAkış
+            </span>
+          </p>
+
+          <h2 className="mx-auto mt-6 max-w-[880px] text-center text-[clamp(2rem,4.6vw,3.6rem)] leading-[1.12] font-bold tracking-[-0.025em]">
+            Etkinliğinizin Gerçek Potansiyelini Ortaya Çıkarın
           </h2>
+
+          <p className="mx-auto mt-6 max-w-[680px] text-center text-[14px] leading-[1.7] text-fg-muted">
+            MIXOinteractive, katılımcıları deneyimin aktif bir parçası haline
+            getirerek etkinliğinizin yarattığı değeri artırır. Daha yüksek
+            etkileşim, daha güçlü marka deneyimi ve ölçülebilir sonuçlar elde
+            etmenizi sağlar.
+          </p>
 
           <PolaroidPlaceholder
             label="Çift"
@@ -125,6 +135,40 @@ export function Viral() {
             </div>
           </div>
         </div>
+
+        {/* Dört değer maddesi.
+            Üç fotoğraf kartının İÇİNE konmadılar: o kartlar görsel + tek mesaj
+            taşıyor, bunlar başlık + tek cümlelik dört kısa blok. Ayrı bir satır
+            olarak, ince ayırıcılarla dizildiler. */}
+        <ul className="mt-16 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              title: "Aktif Katılım",
+              body: "Katılımcıları pasif izleyicilerden deneyimin aktif bir parçasına dönüştürün.",
+            },
+            {
+              title: "Değer Üreten İçerikler",
+              body: "Katılımcılar tarafından oluşturulan içerikleri markanız için yeniden kullanılabilir pazarlama varlıklarına dönüştürün.",
+            },
+            {
+              title: "Ölçülebilir İçgörüler",
+              body: "Katılım, etkileşim ve içerik performansını analiz ederek gelecekte daha doğru kararlar alın.",
+            },
+            {
+              title: "Kalıcı Marka Deneyimi",
+              body: "Etkinliğiniz sona erdikten sonra da etkisini sürdüren deneyimler oluşturun.",
+            },
+          ].map(({ title, body }) => (
+            <li key={title} className="border-t border-line pt-5">
+              <h3 className="text-[15px] font-semibold tracking-[-0.01em]">
+                {title}
+              </h3>
+              <p className="mt-2.5 text-[13px] leading-[1.65] text-fg-muted">
+                {body}
+              </p>
+            </li>
+          ))}
+        </ul>
       </Container>
     </section>
   );

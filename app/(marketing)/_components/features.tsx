@@ -9,33 +9,41 @@ import { ButtonLink, Container } from "./ui";
  */
 const features = [
   {
-    tag: "Özelleştirme",
-    title: "Gecenizin Kimliğini Yansıtın",
-    body: "Sistemi tamamen kendi konseptinize göre tasarlayın. Düğün, lansman veya partinize özel renkler, logolar ve karşılama ekranları oluşturarak benzersiz bir atmosfer yaratın.",
+    tag: "1. Adım",
+    title: "Etkinlik Yapılandırılır",
+    body: "Etkinlik bilgileri, marka kimliği ve deneyim kurgusu oluşturulur. Yapay zekâ, etkinliğin konseptine uygun görevler üretir; dilerseniz bu görevleri özelleştirebilir veya kendi görevlerinizi ekleyebilirsiniz.",
     media: "Tablet / karşılama ekranı",
     src: "/gorseller/karsilama-ekrani.webp",
     lift: "lg:mt-0",
   },
   {
-    tag: "Canlı Moderasyon",
-    title: "Kontrol Daima Sizde",
-    body: "Dev ekrana yansıyacak tüm fotoğrafları akıllı yapay zeka filtreleriyle güvende tutun veya tek tıkla kendi cep telefonunuzdan onaylayarak sahneye gönderin.",
-    media: "Telefonda moderasyon",
-    src: "/gorseller/telefonda-moderasyon.webp",
+    tag: "2. Adım",
+    title: "Katılımcılar Deneyime Dahil Olur",
+    body: "Katılımcılar QR kod ile uygulama indirmeden saniyeler içinde etkinliğe katılır. Yapay zekâ tarafından oluşturulan görev akışıyla deneyimin aktif bir parçası haline gelir.",
+    media: "Misafirler / kutlama",
+    src: "/gorseller/misafirler-kutlama.webp",
     lift: "lg:mt-40",
   },
   {
-    tag: "Premium Deneyim",
-    title: "Geleceğin Eğlence Anlayışı",
-    body: "Sıradan fotoğraf kabinlerini (photobooth) unutun. Masalardan ana sahneye uzanan dijital ve interaktif bir köprü kurarak misafirlerinizi gecenin yıldızı yapın.",
-    media: "Misafirler / kutlama",
-    src: "/gorseller/misafirler-kutlama.webp",
+    tag: "3. Adım",
+    title: "Etkileşim ve İçerik Üretilir",
+    body: "Katılımcılar görevleri tamamlayarak fotoğraf ve içerik üretir. Tüm içerikler gerçek zamanlı olarak tek platformda toplanır ve etkinliğin dijital deneyimini besler.",
+    media: "Telefonda moderasyon",
+    src: "/gorseller/telefonda-moderasyon.webp",
     lift: "lg:mt-20",
   },
   {
-    tag: "Dijital Arşiv",
-    title: "Anılar Sonsuza Dek Sizinle",
-    body: "Etkinlik sonrasında çekilen yüzlerce fotoğraf, yüksek çözünürlüklü dev bir galeri olarak size teslim edilir. Gecenin en güzel anlarını tek tıkla indirin ve saklayın.",
+    /**
+     * 4. ADIM METNİ BENİM YAZDIĞIM — onay bekliyor.
+     *
+     * Gönderilen metinde üç adım vardı ama bu bölümde dört fotoğraf kutusu
+     * var ve bölümün giriş paragrafı "etkinlik öncesinden etkinlik sonrasına
+     * kadar" diyor. Üç adımda bırakmak hem bir kutuyu boş bırakır hem de
+     * girişin verdiği sözü tutmazdı. Metin değiştirilecekse tek yer burası.
+     */
+    tag: "4. Adım",
+    title: "Sonuçlar Ölçülür ve Arşivlenir",
+    body: "Etkinlik sonrasında katılım, etkileşim ve içerik performansı raporlanır. Üretilen tüm içerikler yüksek çözünürlüklü dijital arşiv olarak teslim edilir ve markanız için yeniden kullanılabilir hale gelir.",
     media: "Galeri / baskılar",
     src: "/gorseller/galeri-baskilar.webp",
     lift: "lg:mt-36",
@@ -50,7 +58,7 @@ export function Features() {
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
             <h2 className="max-w-[460px] text-[clamp(2rem,4vw,3.35rem)] leading-[1.06] font-bold tracking-[-0.025em]">
-              Her Etkinlikte Kusursuz Kontrol
+              MIXOinteractive Nasıl Çalışır?
             </h2>
             <ButtonLink
               href="#paketler"
@@ -73,12 +81,12 @@ export function Features() {
               className="absolute -top-6 left-12 hidden w-[76px] rotate-[8deg] lg:block"
             />
             <p className="text-[clamp(1.25rem,2vw,1.7rem)] leading-[1.32] font-normal tracking-[-0.01em]">
-              Arka planda çalışan güçlü otonom sistem sayesinde etkinlik sırasındaki
-              tüm stresi unutun
+              MIXOinteractive, yapay zekâ destekli iş akışıyla katılımcı deneyimini
+              uçtan uca yönetir
             </p>
             <p className="mt-6 max-w-[470px] text-[13px] leading-[1.65] text-fg-muted">
-              İster büyük bir organizasyon şirketi olun, ister kendi özel gecenizi
-              tasarlayın; misafirlerinize yıllarca konuşulacak bir şov sunun.
+              Etkinlik öncesinden etkinlik sonrasına kadar tüm süreç tek bir platform
+              üzerinden planlanır, yönetilir ve ölçülür.
             </p>
           </div>
         </div>
