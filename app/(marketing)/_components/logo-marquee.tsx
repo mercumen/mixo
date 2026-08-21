@@ -1,51 +1,29 @@
 /**
  * Referans logo şeridi.
  *
- * GEÇİCİ: Gerçek logolar SVG olarak gelmedi. Aşağıdakiler wordmark'ların
- * tipografik yaklaşımı. SVG'ler geldiğinde sadece `logos` dizisini değiştir.
+ * Logolar gerçek: müşterinin gönderdiği görsellerden beyaz monokrom +
+ * şeffaf zemine çevrildi (koyu temada tek tip dursunlar diye).
+ * Kaynaklar `public/gorseller/logolar/` altında.
+ *
+ * Yükseklikler logo başına ayrı: her markanın görsel ağırlığı farklı —
+ * kare/dikey logolar (TTV, AURAMIND) yatay wordmark'larla (incom) aynı
+ * yükseklikte basılırsa cılız görünüyor.
  */
 
 const logos = [
-  { name: "Walther Kranz", kind: "split" },
-  { name: "More", kind: "stacked" },
-  { name: "GIS", kind: "plain" },
+  { name: "incom", src: "/gorseller/logolar/incom.png", h: "h-6" },
+  { name: "AURAMIND", src: "/gorseller/logolar/auramind.png", h: "h-9" },
+  {
+    name: "Türkiye Tasarım Vakfı",
+    src: "/gorseller/logolar/ttv.png",
+    h: "h-10",
+  },
+  { name: "JCI Türkiye", src: "/gorseller/logolar/jci.png", h: "h-8" },
 ] as const;
 
-function LogoMark({ logo }: { logo: (typeof logos)[number] }) {
-  if (logo.kind === "split") {
-    return (
-      <span className="flex items-center gap-2 text-fg/75">
-        <span aria-hidden="true" className="text-lg leading-none font-light">
-          \/\/
-        </span>
-        <span className="h-6 w-px bg-line-strong" aria-hidden="true" />
-        <span className="flex flex-col text-[11px] leading-[1.15] font-semibold tracking-[0.12em]">
-          <span>WALTHER</span>
-          <span>KRANZ</span>
-        </span>
-      </span>
-    );
-  }
-
-  if (logo.kind === "stacked") {
-    return (
-      <span className="flex flex-col text-[13px] leading-[0.95] font-bold tracking-[0.06em] text-fg/75">
-        <span>MO</span>
-        <span>RE</span>
-      </span>
-    );
-  }
-
-  return (
-    <span className="text-[15px] font-semibold tracking-[0.08em] text-fg/75">
-      GIS
-    </span>
-  );
-}
-
 export function LogoMarquee() {
-  // Şeridi iki kez basıyoruz; animasyon -%50 kaydırınca dikiş görünmez.
-  const track = [...logos, ...logos, ...logos, ...logos];
+  // Şeridi çoğaltıyoruz; animasyon -%50 kaydırınca dikiş görünmez.
+  const track = [...logos, ...logos, ...logos];
 
   return (
     <div
@@ -70,7 +48,15 @@ export function LogoMarquee() {
                 key={`${logo.name}-${i}`}
                 className="flex h-12 shrink-0 items-center justify-center px-9"
               >
-                <LogoMark logo={logo} />
+                {/* Dekoratif tekrar eden şerit — next/image'ın getirisi yok,
+                    dosyalar zaten 3-13 KB optimize PNG */}
+                <img
+                  src={logo.src}
+                  alt={logo.name}
+                  className={`${logo.h} w-auto opacity-75`}
+                  loading="lazy"
+                  draggable={false}
+                />
               </li>
             ))}
           </ul>
