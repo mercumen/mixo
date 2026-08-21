@@ -23,6 +23,10 @@ import { SetupWizard } from "./_components/setup-wizard/setup-wizard";
 import { InfoNote, SectionHeading } from "./_components/ui-bits";
 import { qrDataUrl } from "@/lib/qr";
 import { QrDownloadModal } from "./_components/qr-download-modal";
+import { GuideCard } from "./_components/guide-card";
+import { computeGuide, GUIDE_DISMISSED } from "@/lib/guide";
+import { hasGuestActivity } from "./_lib/data";
+import { publicEnv } from "@/lib/env";
 import { getDashboardContext } from "./_lib/context";
 import { listMissions } from "./_lib/data";
 import {
@@ -67,6 +71,20 @@ export default async function OverviewPage({
   }
 
   const missions = await listMissions(event.id);
+
+  /**
+   * Hazırlık rehberi SADECE ödeme sonrası: öncesinde kullanıcının tek işi
+   * sihirbaz + ödeme, iki liste birden kafa karıştırırdı. `hasGuestActivity`
+   * de ancak o zaman okunuyor — ödenmemişte misafir zaten giremiyor.
+   */
+  const guideSteps = event.paid
+    ? computeGuide({
+        event,
+        missions,
+        hasGuestActivity: await hasGuestActivity(event.id),
+      })
+    : null;
+  const guideDismissed = (event.guideDone ?? []).includes(GUIDE_DISMISSED);
   // QR sunucuda üretiliyor: `qrcode` paketi istemci paketine girmiyor
   const qrImage = await qrDataUrl(event.code, 512);
   const completed = event.completedSteps ?? [];
@@ -82,6 +100,16 @@ export default async function OverviewPage({
 
       <EventBanner event={event} />
 
+      {guideSteps ? (
+        <GuideCard
+          eventId={event.id}
+          code={event.code}
+          displayUrl={`${publicEnv.appUrl.replace(/\/+$/, "")}/display/${event.code}`}
+          steps={guideSteps}
+          dismissed={guideDismissed}
+        />
+      ) : null}
+
       <div>
         <h1 className="text-[19px] font-semibold tracking-tight">Genel Bakış</h1>
         <p className="mt-1 text-[12.5px] text-muted-foreground">
@@ -92,25 +120,37 @@ export default async function OverviewPage({
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <ReadinessCard
-          progress={progress}
-          completed={completed}
-          nextTitle={next.title}
-          nextHint={next.hint}
-        />
+        {/* Ödeme sonrası sihirbaz listesi kalkıyor — yerini üstteki rehber aldı.
+            İki kontrol listesi birden "hangisini takip edeceğim?" sorusu doğuruyordu. */}
+        {!event.paid ? (
+          <ReadinessCard
+            progress={progress}
+            completed={completed}
+            nextTitle={next.title}
+            nextHint={next.hint}
+          />
+        ) : (
+          <div className="space-y-5">
+            <CountdownCard event={event} />
+            <CurrentPlanCard planId={event.planId} />
+          </div>
+        )}
         <div className="space-y-5">
           <TeamInviteCard />
           <DemoQrCard
+            eventId={event.id}
             code={event.code}
             qrImage={qrImage}
             eventName={event.name}
             printDeadline={printDeadlineFor(event.startsAt)}
           />
         </div>
-        <div className="space-y-5">
-          <CountdownCard event={event} />
-          <CurrentPlanCard planId={event.planId} />
-        </div>
+        {!event.paid ? (
+          <div className="space-y-5">
+            <CountdownCard event={event} />
+            <CurrentPlanCard planId={event.planId} />
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -361,18 +401,21 @@ function printDeadlineFor(startsAt: string | null): string | null {
 }
 
 function DemoQrCard({
+  eventId,
   code,
   qrImage,
   eventName,
   printDeadline,
 }: {
+  eventId: string;
   code: string;
   qrImage: string;
   eventName: string;
   printDeadline: string | null;
 }) {
   return (
-    <Card className="gap-0 p-5">
+    // id: hazırlık rehberindeki "QR kartına git" bağlantısının hedefi
+    <Card id="qr-karti" className="scroll-mt-24 gap-0 p-5">
       <SectionHeading
         title="Demo Qr Kodu"
         description="Canlıya almadan önce son adımlar"
@@ -400,6 +443,7 @@ function DemoQrCard({
             </Link>
           </Button>
           <QrDownloadModal
+            eventId={eventId}
             eventName={eventName}
             code={code}
             qrDataUrl={qrImage}

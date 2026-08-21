@@ -153,6 +153,13 @@ export function ModerationModeSwitch({
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Değiştirilemedi.");
+    } else {
+      // Hazırlık rehberi: moderasyon kararı verildi sayılır
+      void fetch(`/api/events/${eventId}/guide`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ step: "moderasyon" }),
+      }).catch(() => {});
     }
     setBusy(false);
     router.refresh();

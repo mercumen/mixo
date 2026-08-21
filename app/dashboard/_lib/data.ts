@@ -212,3 +212,18 @@ export function photoStats(photos: DashboardPhoto[]) {
     rejected: photos.filter((p) => p.status === "rejected").length,
   };
 }
+
+/**
+ * En az bir misafir aktivitesi var mı? — rehberin "telefonla prova" adımı.
+ *
+ * Oturum açmak yeterli sayılMIYOR; fotoğrafın gerçekten düşmesi gerekiyor
+ * (prova uçtan uca ancak öyle kanıtlanıyor). limit(1): CLAUDE.md kural 3.
+ */
+export async function hasGuestActivity(eventId: string): Promise<boolean> {
+  const snap = await getDb()
+    .collection(paths.photos(eventId))
+    .where("status", "in", ["pending", "approved", "manual_review"])
+    .limit(1)
+    .get();
+  return !snap.empty;
+}

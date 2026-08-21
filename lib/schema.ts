@@ -107,6 +107,13 @@ export type EventDoc = {
   paidAt: string | null;
 
   /**
+   * Organizasyona Hazırlık rehberinde tek tıkla kaydedilen adımlar
+   * (qr / moderasyon / ekran + kartın kapatılması). Veriden türeyen adımlar
+   * burada TUTULMUYOR — tek doğruları verinin kendisi (bkz. lib/guide.ts).
+   */
+  guideDone?: string[];
+
+  /**
    * Tamamlanan sihirbaz adımları. Kurulum ilerlemesi yüzdesi ve Genel
    * Bakış'taki kontrol listesi buradan besleniyor — alanlara tek tek bakıp
    * tahmin etmiyoruz.

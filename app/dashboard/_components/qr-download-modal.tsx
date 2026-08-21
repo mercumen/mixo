@@ -31,11 +31,13 @@ import { InfoNote } from "./ui-bits";
 type Choice = "sablon" | "sade";
 
 export function QrDownloadModal({
+  eventId,
   eventName,
   code,
   qrDataUrl,
   printDeadline,
 }: {
+  eventId: string;
   eventName: string;
   code: string;
   qrDataUrl: string;
@@ -52,6 +54,19 @@ export function QrDownloadModal({
    * Şeffaf zemin: QR beyaz dolgulu geldiği için beyaz pikselleri saydam
    * yapıyoruz. Böylece organizatör koyu bir davetiyeye de koyabiliyor.
    */
+  /**
+   * Hazırlık rehberinin "QR kodlarını yazdır" adımı: indirme/yazdırma
+   * gerçekleştiğinde kendiliğinden işaretlenir — kullanıcıya ayrıca kutu
+   * işaretletmiyoruz. Hata yutulur: rehber kaydı düşse de indirme başarılı.
+   */
+  function markGuideStep() {
+    void fetch(`/api/events/${eventId}/guide`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ step: "qr" }),
+    }).catch(() => {});
+  }
+
   async function downloadPng() {
     setBusy(true);
     try {
@@ -105,6 +120,7 @@ export function QrDownloadModal({
       a.download = `mixo-qr-${code}.png`;
       a.click();
       URL.revokeObjectURL(url);
+      markGuideStep();
     } finally {
       setBusy(false);
     }
@@ -201,7 +217,7 @@ export function QrDownloadModal({
           {choice === "sablon" ? (
             <Button asChild size="sm">
               {/* Baskı sayfası panel kabuğunun dışında — çıktıya sidebar girmesin */}
-              <Link href="/qr" target="_blank">
+              <Link href="/qr" target="_blank" onClick={markGuideStep}>
                 <Printer className="size-3.5" aria-hidden="true" />
                 Baskı Sayfasını Aç
               </Link>
