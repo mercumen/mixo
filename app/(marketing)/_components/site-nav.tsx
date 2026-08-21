@@ -8,10 +8,11 @@ import { ButtonLink, Container } from "./ui";
  * Tasarımda 3 nav linki var ve "Nasıl Çalışır" aktif görünüyor (koyu pill).
  * Bu bölümler henüz yok — hepsi sayfa içi anchor'a bağlı.
  */
+// Sıra sayfadaki bölüm akışıyla aynı (paketler en sonda)
 const navLinks = [
   { label: "Nasıl Çalışır", href: "#nasil-calisir", active: true },
-  { label: "Paketler", href: "#paketler", active: false },
   { label: "Vizyonumuz", href: "#vizyonumuz", active: false },
+  { label: "Paketler", href: "#paketler", active: false },
 ] as const;
 
 export function SiteNav() {

@@ -4,8 +4,11 @@ import { Pricing } from "./_components/pricing";
 import { Viral } from "./_components/viral";
 
 /**
- * Landing page. Ekran görüntülerindeki 4 bölümün sırası:
- * hero → paketler → özellikler → viral/kapanış.
+ * Landing page. Bölüm sırası:
+ * hero → özellikler → viral/kapanış → paketler.
+ *
+ * Paketler EN SONDA: ziyaretçi önce ürünün ne yaptığını görüyor,
+ * fiyat/paket konuşması sayfanın kapanışı.
  *
  * Tamamı Server Component; sayfada state yok, "use client" gerekmiyor.
  */
@@ -13,9 +16,9 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <Pricing />
       <Features />
       <Viral />
+      <Pricing />
     </>
   );
 }
