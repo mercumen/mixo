@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { generateUniqueEventCode } from "@/lib/event-code";
 import { getDb } from "@/lib/firebase/admin";
 import { templatesForType } from "@/lib/mission-templates";
+import { isPlanId } from "@/lib/plans";
 import { paths, type EventDoc, type MissionDoc } from "@/lib/schema";
 import { eventTypes, guestRanges } from "@/app/(onboarding)/_lib/event-setup";
 
@@ -76,8 +77,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
-  const { name, typeId, guestRange, date, startTime, endTime, expectedGuests, locationName } =
+  const { name, typeId, guestRange, date, startTime, endTime, expectedGuests, locationName, planId } =
     (body ?? {}) as Record<string, unknown>;
+
+  /**
+   * Sihirbazda Paket adımı, etkinliği yaratan adımdan ÖNCE geliyor; seçim bu
+   * istekle birlikte ulaşıyor. Burada kaydedilmezse kullanıcı paketi seçtiği
+   * halde sihirbaz her açılışta yeniden soruyordu (planId hep null kalıyordu).
+   * Geçersiz/boş değer null: paket seçilmeden de etkinlik yaratılabiliyor.
+   */
+  const chosenPlan = isPlanId(planId) ? planId : null;
 
   const trimmedName = typeof name === "string" ? name.trim() : "";
   if (trimmedName.length === 0 || trimmedName.length > MAX_NAME_LENGTH) {
@@ -151,15 +160,16 @@ export async function POST(request: Request) {
       missionTone: null,
       missionTheme: null,
       missionFacts: [],
-      planId: null,
+      planId: chosenPlan,
       /**
        * Ödeme yapılmadı. Bu hâlde MİSAFİR GİREMEZ (QR basılabilir) ve
        * panelin görev/akış/sahne/galeri/ekip sayfaları kilitli.
        */
       paid: false,
       paidAt: null,
-      // Sihirbazın 1. adımı bu isteği doğuruyor, dolayısıyla tamamlandı
-      completedSteps: ["bilgiler"],
+      // Bu isteği Etkinlik Bilgileri adımı doğuruyor; paket de seçilmişse o
+      // adım da bitmiş sayılır — sihirbaz açılış adımını bu listeden seçiyor
+      completedSteps: chosenPlan ? ["paket", "bilgiler"] : ["bilgiler"],
       createdAt: new Date().toISOString(),
     };
 

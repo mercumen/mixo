@@ -114,8 +114,14 @@ export function SetupWizard({
 
   const [step, setStep] = useState<SetupStepId>(() => {
     const done = new Set(event?.completedSteps ?? []);
-    // Landing'de paket seçildiyse o adım bitmiş sayılıyor
-    if (draftForStart?.planId) done.add("paket");
+    // Landing'de paket seçildiyse o adım bitmiş sayılıyor.
+    // Etkinlikte paket ZATEN kayıtLIYSA da öyle — paket sabit bir alan
+    // (lib/event-lock.ts), dolu geldiyse yeniden sormanın anlamı yok.
+    // (Eski etkinliklerde completedSteps "paket" içermeyebiliyor; tek
+    // doğru planId'nin kendisi.)
+    if (draftForStart?.planId || isPlanId(event?.planId ?? null)) {
+      done.add("paket");
+    }
     return setupSteps.find((s) => !done.has(s.id))?.id ?? "paket";
   });
 
@@ -171,6 +177,12 @@ export function SetupWizard({
 
   const meta = setupSteps.find((s) => s.id === step)!;
   const stepIndex = setupSteps.findIndex((s) => s.id === step);
+  /**
+   * Paket bir kez KAYDEDİLDİYSE sabit (lib/event-lock.ts) — sunucu zaten
+   * değişikliği 403 ile reddediyor; seçiciyi açık bırakmak kullanıcıyı
+   * seçtirdikten sonra hata gösterip yanıltmak olurdu.
+   */
+  const planLocked = Boolean(event && isPlanId(event.planId));
   const completedSteps = [
     ...(event?.completedSteps ?? []),
     // Landing'de seçildiyse ray da tamamlanmış göstersin
@@ -346,7 +358,9 @@ export function SetupWizard({
               </DialogTitle>
               <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
                 {step === "paket"
-                  ? "Paketler etkinlik başına; abonelik yok, otomatik yenileme yok. Salonda görünecek sahne şablonları da pakete göre değişiyor."
+                  ? planLocked
+                    ? "Paketin kaydedildi ve sabitlendi. Değişiklik gerekiyorsa bizimle iletişime geç."
+                    : "Paketler etkinlik başına; abonelik yok, otomatik yenileme yok. Salonda görünecek sahne şablonları da pakete göre değişiyor."
                   : step === "bilgiler"
                     ? "Tarih ve saat her şeyi besliyor: geri sayım, sahne ekranının açılışı, davet süreleri."
                     : step === "sahne"
@@ -364,7 +378,7 @@ export function SetupWizard({
                     tone="light"
                     value={planId}
                     onSelect={setPlanId}
-                    disabled={busy}
+                    disabled={busy || planLocked}
                   />
                 ) : step === "bilgiler" ? (
                   <StepEventInfo
@@ -428,8 +442,10 @@ export function SetupWizard({
                 Geri
               </Button>
 
+              {/* Paket/tarih/tür sabitleniyor (event-lock) — eski "her şey
+                  değiştirilebilir" cümlesi artık yanlıştı */}
               <span className="hidden flex-1 text-[11.5px] text-muted-foreground sm:block">
-                Tüm seçimler sonradan değiştirilebilir
+                Sahne ve görevler sonradan değiştirilebilir
               </span>
 
               <div className="flex items-center gap-3">
